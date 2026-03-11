@@ -123,7 +123,10 @@ impl App {
         self.show_diff(None, Some(&res_str));
 
         // Confirm before applying
-        if !self.skip_confirm && !self.dry_run && !self.executor.confirm("Apply changes and rebuild?")? {
+        if !self.skip_confirm
+            && !self.dry_run
+            && !self.executor.confirm("Apply changes and rebuild?")?
+        {
             println!("{}", "Changes cancelled.".yellow());
             return Ok(());
         }
@@ -197,7 +200,10 @@ impl App {
         self.show_diff(Some(&res_str), None);
 
         // Confirm before applying
-        if !self.skip_confirm && !self.dry_run && !self.executor.confirm("Apply changes and rebuild?")? {
+        if !self.skip_confirm
+            && !self.dry_run
+            && !self.executor.confirm("Apply changes and rebuild?")?
+        {
             println!("{}", "Changes cancelled.".yellow());
             return Ok(());
         }
