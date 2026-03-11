@@ -8,6 +8,7 @@ use std::collections::HashMap;
 
 /// Package information from nixpkgs
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 pub struct PackageInfo {
     pub name: String,
     pub pname: Option<String>,
@@ -212,7 +213,7 @@ impl PackageResolver {
             // nix-locate output format: attr.path output/path/to/file
             if let Some(attr) = line.split_whitespace().next() {
                 // Extract just the package name from attr.path
-                let pkg_name = attr.split('.').last().unwrap_or(attr);
+                let pkg_name = attr.split('.').next_back().unwrap_or(attr);
 
                 results.push(SearchResult {
                     attr_name: attr.to_string(),

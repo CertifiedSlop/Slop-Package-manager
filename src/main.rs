@@ -35,8 +35,7 @@ impl App {
     pub fn new(cli: &Cli) -> Result<Self> {
         let config_path = cli
             .config
-            .as_ref()
-            .map(|p| p.clone())
+            .clone()
             .unwrap_or_else(|| "/etc/nixos/configuration.nix".to_string());
 
         let config = NixConfig::load(&config_path)
@@ -124,11 +123,9 @@ impl App {
         self.show_diff(None, Some(&res_str));
 
         // Confirm before applying
-        if !self.skip_confirm && !self.dry_run {
-            if !self.executor.confirm("Apply changes and rebuild?")? {
-                println!("{}", "Changes cancelled.".yellow());
-                return Ok(());
-            }
+        if !self.skip_confirm && !self.dry_run && !self.executor.confirm("Apply changes and rebuild?")? {
+            println!("{}", "Changes cancelled.".yellow());
+            return Ok(());
         }
 
         if self.dry_run {
@@ -200,11 +197,9 @@ impl App {
         self.show_diff(Some(&res_str), None);
 
         // Confirm before applying
-        if !self.skip_confirm && !self.dry_run {
-            if !self.executor.confirm("Apply changes and rebuild?")? {
-                println!("{}", "Changes cancelled.".yellow());
-                return Ok(());
-            }
+        if !self.skip_confirm && !self.dry_run && !self.executor.confirm("Apply changes and rebuild?")? {
+            println!("{}", "Changes cancelled.".yellow());
+            return Ok(());
         }
 
         if self.dry_run {

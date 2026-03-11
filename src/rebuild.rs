@@ -10,6 +10,7 @@ use std::process::{Command, Stdio};
 
 /// Result of a rebuild operation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct RebuildResult {
     pub success: bool,
     pub output: String,
@@ -137,6 +138,7 @@ impl RebuildExecutor {
     }
 
     /// Validate the configuration without rebuilding
+    #[allow(dead_code)]
     pub fn check(&self, config_path: &Path) -> Result<bool> {
         println!("{}", "Checking Nix configuration...".blue());
 
@@ -209,6 +211,7 @@ impl RebuildExecutor {
     }
 
     /// Run nixos-rebuild with custom arguments
+    #[allow(dead_code)]
     pub fn rebuild_with_args(&self, args: &[&str]) -> Result<RebuildResult> {
         if self.dry_run {
             println!(
@@ -256,6 +259,7 @@ pub fn is_nixos() -> bool {
 }
 
 /// Check if user has sudo privileges
+#[allow(dead_code)]
 pub fn has_sudo() -> bool {
     Command::new("sudo")
         .arg("-n")

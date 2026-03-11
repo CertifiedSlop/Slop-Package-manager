@@ -11,6 +11,7 @@ use tempfile::NamedTempFile;
 
 /// Represents the parsed structure of a Nix configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct NixConfig {
     /// Raw content of the file
     pub content: String,
@@ -257,6 +258,7 @@ impl NixConfig {
     }
 
     /// Generate a diff between original and modified content
+    #[allow(dead_code)]
     pub fn diff(&self, original: &str) -> String {
         use similar::{ChangeTag, TextDiff};
 
@@ -276,6 +278,7 @@ impl NixConfig {
     }
 
     /// Get the default config path
+    #[allow(dead_code)]
     pub fn default_path() -> PathBuf {
         PathBuf::from("/etc/nixos/configuration.nix")
     }
