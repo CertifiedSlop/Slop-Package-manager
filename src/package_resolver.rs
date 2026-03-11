@@ -60,6 +60,7 @@ impl PackageResolver {
         self.package_aliases.insert("code", "vscode");
         self.package_aliases.insert("editor", "neovim"); // default
         self.package_aliases.insert("text editor", "neovim");
+        self.package_aliases.insert("terminal editor", "neovim");
 
         // Terminal aliases
         self.package_aliases.insert("terminal", "alacritty");
