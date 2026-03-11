@@ -1,8 +1,8 @@
 //! Rebuild executor for NixOS
-//! 
+//!
 //! Handles running nixos-rebuild and related commands safely.
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use std::io::{self, Write};
 use std::path::Path;
@@ -50,9 +50,7 @@ impl RebuildExecutor {
             cmd.arg("--show-trace");
         }
 
-        let output = cmd
-            .output()
-            .context("Failed to execute nixos-rebuild")?;
+        let output = cmd.output().context("Failed to execute nixos-rebuild")?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -63,12 +61,13 @@ impl RebuildExecutor {
         let generation = self.extract_generation(&full_output);
 
         if output.status.success() {
-            println!(
-                "{}",
-                "✓ System rebuild successful!".green().bold()
-            );
+            println!("{}", "✓ System rebuild successful!".green().bold());
             if let Some(gen) = generation {
-                println!("{} {}", "Generation:".green(), gen.to_string().green().bold());
+                println!(
+                    "{} {}",
+                    "Generation:".green(),
+                    gen.to_string().green().bold()
+                );
             }
         } else {
             eprintln!("{}", "✗ Rebuild failed!".red().bold());
@@ -86,7 +85,9 @@ impl RebuildExecutor {
     fn dry_run_rebuild(&self) -> Result<RebuildResult> {
         println!(
             "{}",
-            "[DRY RUN] Would execute: sudo nixos-rebuild switch".yellow().bold()
+            "[DRY RUN] Would execute: sudo nixos-rebuild switch"
+                .yellow()
+                .bold()
         );
         println!(
             "{}",
@@ -94,9 +95,7 @@ impl RebuildExecutor {
         );
 
         // Check if nixos-rebuild is available
-        let check = Command::new("nixos-rebuild")
-            .arg("--version")
-            .output();
+        let check = Command::new("nixos-rebuild").arg("--version").output();
 
         match check {
             Ok(out) => {
@@ -164,7 +163,7 @@ impl RebuildExecutor {
             .iter()
             .filter(|p| !old_packages.contains(p))
             .collect();
-        
+
         let removed: Vec<_> = old_packages
             .iter()
             .filter(|p| !new_packages.contains(p))
@@ -214,7 +213,11 @@ impl RebuildExecutor {
         if self.dry_run {
             println!(
                 "{}",
-                format!("[DRY RUN] Would execute: sudo nixos-rebuild {}", args.join(" ")).yellow()
+                format!(
+                    "[DRY RUN] Would execute: sudo nixos-rebuild {}",
+                    args.join(" ")
+                )
+                .yellow()
             );
             return Ok(RebuildResult {
                 success: true,
@@ -225,17 +228,14 @@ impl RebuildExecutor {
 
         let mut cmd = Command::new("sudo");
         cmd.arg("nixos-rebuild");
-        
+
         for arg in args {
             cmd.arg(arg);
         }
 
-        cmd.stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-        let output = cmd
-            .output()
-            .context("Failed to execute nixos-rebuild")?;
+        let output = cmd.output().context("Failed to execute nixos-rebuild")?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -273,7 +273,7 @@ mod tests {
         let executor = RebuildExecutor::new(false, false, true);
         let output = "building NixOS...
 Done. The new configuration is generation 42";
-        
+
         assert_eq!(executor.extract_generation(output), Some(42));
     }
 
@@ -281,8 +281,12 @@ Done. The new configuration is generation 42";
     fn test_show_diff() {
         let executor = RebuildExecutor::new(false, false, true);
         let old = vec!["firefox".to_string(), "git".to_string()];
-        let new = vec!["firefox".to_string(), "git".to_string(), "neovim".to_string()];
-        
+        let new = vec![
+            "firefox".to_string(),
+            "git".to_string(),
+            "neovim".to_string(),
+        ];
+
         // This just tests that it doesn't panic
         executor.show_diff(&old, &new);
     }

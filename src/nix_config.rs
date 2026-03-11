@@ -1,13 +1,13 @@
 //! Nix configuration file parser and editor
-//! 
+//!
 //! Handles parsing, modifying, and validating configuration.nix files.
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
+use fs_extra::file::{copy, CopyOptions};
 use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
-use fs_extra::file::{copy, CopyOptions};
 
 /// Represents the parsed structure of a Nix configuration
 #[derive(Debug, Clone)]
@@ -49,7 +49,7 @@ impl NixConfig {
         // Match: environment.systemPackages = with pkgs; [ ... ];
         // or: environment.systemPackages = [ ... ];
         let re = Regex::new(
-            r"(?s)environment\.systemPackages\s*=\s*(?:with\s+pkgs\s*;\s*)?\[([^\]]*)\]"
+            r"(?s)environment\.systemPackages\s*=\s*(?:with\s+pkgs\s*;\s*)?\[([^\]]*)\]",
         )
         .context("Failed to compile regex")?;
 
@@ -77,16 +77,17 @@ impl NixConfig {
     /// Find the byte range of the packages list for editing
     fn find_packages_range(content: &str) -> Option<(usize, usize)> {
         let re = Regex::new(
-            r"(?s)(environment\.systemPackages\s*=\s*(?:with\s+pkgs\s*;\s*)?)\[([^\]]*)\]"
-        ).ok()?;
+            r"(?s)(environment\.systemPackages\s*=\s*(?:with\s+pkgs\s*;\s*)?)\[([^\]]*)\]",
+        )
+        .ok()?;
 
         if let Some(caps) = re.captures(content) {
             let full_match = caps.get(0)?;
             let packages_content = caps.get(2)?;
-            
+
             let start = full_match.start();
             let end = full_match.end();
-            
+
             return Some((start, end));
         }
 
@@ -96,7 +97,7 @@ impl NixConfig {
     /// Detect if the configuration uses flakes
     fn detect_flakes(content: &str) -> bool {
         // Check for common flake indicators
-        content.contains("flake.nix") 
+        content.contains("flake.nix")
             || content.contains("inputs.")
             || content.contains("outputs = {")
     }
@@ -121,7 +122,7 @@ impl NixConfig {
     pub fn remove_package(&mut self, package: &str) -> Result<bool> {
         let initial_len = self.packages.len();
         self.packages.retain(|p| p != package);
-        
+
         if self.packages.len() < initial_len {
             self.rebuild_content()?;
             Ok(true)
@@ -139,7 +140,7 @@ impl NixConfig {
 
         // Build new packages list with proper formatting
         let packages_str = self.format_packages();
-        
+
         // Determine the prefix (with pkgs; or not)
         let prefix = if self.content[start..end].contains("with pkgs") {
             "environment.systemPackages = with pkgs; "
@@ -148,47 +149,49 @@ impl NixConfig {
         };
 
         let new_section = format!("{}[ {}]", prefix, packages_str);
-        
+
         // Replace the old section
         let mut new_content = String::new();
         new_content.push_str(&self.content[..start]);
         new_content.push_str(&new_section);
         new_content.push_str(&self.content[end..]);
-        
+
         self.content = new_content;
-        
+
         // Update the range for future edits
         self.packages_range = Some((start, start + new_section.len()));
-        
+
         Ok(())
     }
 
     /// Add a packages section if it doesn't exist
     fn add_packages_section(&mut self) -> Result<()> {
         // Find a good place to insert - after the opening { or after imports
-        let insert_re = Regex::new(r"(?m)^\s*imports\s*=\s*\[[^\]]*\]\s*;").ok()
+        let insert_re = Regex::new(r"(?m)^\s*imports\s*=\s*\[[^\]]*\]\s*;")
+            .ok()
             .and_then(|re| re.find(&self.content));
 
         let insert_pos = if let Some(m) = insert_re {
             m.end()
         } else {
             // Find first { and insert after it
-            self.content.find('{')
-                .map(|p| p + 1)
-                .unwrap_or(0)
+            self.content.find('{').map(|p| p + 1).unwrap_or(0)
         };
 
         let packages_str = self.format_packages();
-        let new_section = format!("\n\n  environment.systemPackages = with pkgs; [ {}];", packages_str);
-        
+        let new_section = format!(
+            "\n\n  environment.systemPackages = with pkgs; [ {}];",
+            packages_str
+        );
+
         let mut new_content = String::new();
         new_content.push_str(&self.content[..insert_pos]);
         new_content.push_str(&new_section);
         new_content.push_str(&self.content[insert_pos..]);
-        
+
         self.content = new_content;
         self.packages_range = Some((insert_pos, insert_pos + new_section.len()));
-        
+
         Ok(())
     }
 
@@ -200,11 +203,9 @@ impl NixConfig {
     /// Validate the Nix syntax
     pub fn validate(&self) -> Result<()> {
         // Create a temp file with the content
-        let temp_file = NamedTempFile::new()
-            .context("Failed to create temp file")?;
-        
-        fs::write(&temp_file, &self.content)
-            .context("Failed to write temp file")?;
+        let temp_file = NamedTempFile::new().context("Failed to create temp file")?;
+
+        fs::write(&temp_file, &self.content).context("Failed to write temp file")?;
 
         // Run nix-instantiate to check syntax
         let output = std::process::Command::new("nix-instantiate")
@@ -241,11 +242,9 @@ impl NixConfig {
     /// Save the configuration to disk
     pub fn save(&self) -> Result<()> {
         // Write to temp file first
-        let temp_file = NamedTempFile::new()
-            .context("Failed to create temp file")?;
-        
-        fs::write(&temp_file, &self.content)
-            .context("Failed to write temp file")?;
+        let temp_file = NamedTempFile::new().context("Failed to create temp file")?;
+
+        fs::write(&temp_file, &self.content).context("Failed to write temp file")?;
 
         // Validate before saving
         self.validate()?;
@@ -335,7 +334,7 @@ mod tests {
 "#;
         let (path, _dir) = create_test_config(content);
         let mut config = NixConfig::load(&path).unwrap();
-        
+
         config.add_package("neovim").unwrap();
         assert!(config.has_package("neovim"));
         assert!(config.has_package("firefox"));
@@ -354,7 +353,7 @@ mod tests {
 "#;
         let (path, _dir) = create_test_config(content);
         let mut config = NixConfig::load(&path).unwrap();
-        
+
         let removed = config.remove_package("neovim").unwrap();
         assert!(removed);
         assert!(!config.has_package("neovim"));
@@ -372,7 +371,7 @@ mod tests {
 "#;
         let (path, _dir) = create_test_config(content);
         let mut config = NixConfig::load(&path).unwrap();
-        
+
         config.add_package("firefox").unwrap();
         // Should still only have one firefox
         let firefox_count = config.packages.iter().filter(|p| *p == "firefox").count();

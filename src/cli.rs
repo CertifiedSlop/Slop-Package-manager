@@ -1,5 +1,5 @@
 //! CLI argument parser for slop
-//! 
+//!
 //! Defines the command-line interface using clap.
 
 use clap::{Parser, Subcommand};
@@ -96,7 +96,9 @@ mod tests {
     #[test]
     fn test_parse_ai() {
         let cli = Cli::parse_from(["slop", "ai", "install a browser"]);
-        assert!(matches!(cli.command, Commands::Ai { ref request } if request == "install a browser"));
+        assert!(
+            matches!(cli.command, Commands::Ai { ref request } if request == "install a browser")
+        );
     }
 
     #[test]

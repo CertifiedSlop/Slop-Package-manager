@@ -1,5 +1,5 @@
 //! Package resolver for Nix packages
-//! 
+//!
 //! Handles package name resolution, searching, and validation.
 
 use anyhow::{Context, Result};
@@ -49,7 +49,7 @@ impl PackageResolver {
         self.package_aliases.insert("chromium", "chromium");
         self.package_aliases.insert("brave", "brave");
         self.package_aliases.insert("browser", "firefox"); // default
-        
+
         // Editor aliases
         self.package_aliases.insert("neovim", "neovim");
         self.package_aliases.insert("nvim", "neovim");
@@ -59,7 +59,7 @@ impl PackageResolver {
         self.package_aliases.insert("code", "vscode");
         self.package_aliases.insert("editor", "neovim"); // default
         self.package_aliases.insert("text editor", "neovim");
-        
+
         // Terminal aliases
         self.package_aliases.insert("terminal", "alacritty");
         self.package_aliases.insert("term", "alacritty");
@@ -67,19 +67,19 @@ impl PackageResolver {
         self.package_aliases.insert("kitty", "kitty");
         self.package_aliases.insert("wezterm", "wezterm");
         self.package_aliases.insert("foot", "foot");
-        
+
         // Shell aliases
         self.package_aliases.insert("zsh", "zsh");
         self.package_aliases.insert("fish", "fish");
         self.package_aliases.insert("bash", "bash");
         self.package_aliases.insert("nushell", "nushell");
         self.package_aliases.insert("shell", "zsh");
-        
+
         // Git aliases
         self.package_aliases.insert("git", "git");
         self.package_aliases.insert("gitui", "gitui");
         self.package_aliases.insert("lazygit", "lazygit");
-        
+
         // Development tools
         self.package_aliases.insert("rust", "rustup");
         self.package_aliases.insert("cargo", "rustup");
@@ -90,7 +90,7 @@ impl PackageResolver {
         self.package_aliases.insert("nodejs", "nodejs");
         self.package_aliases.insert("go", "go");
         self.package_aliases.insert("golang", "go");
-        
+
         // Utilities
         self.package_aliases.insert("htop", "htop");
         self.package_aliases.insert("btop", "btop");
@@ -103,25 +103,25 @@ impl PackageResolver {
         self.package_aliases.insert("bat", "bat");
         self.package_aliases.insert("eza", "eza");
         self.package_aliases.insert("ls", "eza");
-        
+
         // Media
         self.package_aliases.insert("vlc", "vlc");
         self.package_aliases.insert("mpv", "mpv");
         self.package_aliases.insert("player", "mpv");
         self.package_aliases.insert("spotify", "spotify");
-        
+
         // Communication
         self.package_aliases.insert("discord", "discord");
         self.package_aliases.insert("telegram", "telegram-desktop");
         self.package_aliases.insert("signal", "signal-desktop");
         self.package_aliases.insert("slack", "slack");
-        
+
         // File managers
         self.package_aliases.insert("ranger", "ranger");
         self.package_aliases.insert("nnn", "nnn");
         self.package_aliases.insert("lf", "lf");
         self.package_aliases.insert("file manager", "ranger");
-        
+
         // System tools
         self.package_aliases.insert("docker", "docker");
         self.package_aliases.insert("podman", "podman");
@@ -132,12 +132,12 @@ impl PackageResolver {
     /// Resolve a natural name to a nixpkgs attribute name
     pub fn resolve(&self, name: &str) -> Option<&str> {
         let name_lower = name.to_lowercase();
-        
+
         // Check direct alias
         if let Some(&attr) = self.package_aliases.get(name_lower.as_str()) {
             return Some(attr);
         }
-        
+
         // Return the name as-is if no alias found
         // The user might be providing the exact attr_name
         Some(name)
@@ -177,15 +177,27 @@ impl PackageResolver {
         }
 
         // Sort by score
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-        
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         results
     }
 
     /// Search using nix-locate command
     fn search_with_nix_locate(&self, query: &str) -> Result<Vec<SearchResult>> {
         let output = std::process::Command::new("nix-locate")
-            .args(["--minimal", "--no-group", "--type", "x", "--whole-name", "--at-root", query])
+            .args([
+                "--minimal",
+                "--no-group",
+                "--type",
+                "x",
+                "--whole-name",
+                "--at-root",
+                query,
+            ])
             .output()
             .context("Failed to run nix-locate")?;
 
@@ -201,7 +213,7 @@ impl PackageResolver {
             if let Some(attr) = line.split_whitespace().next() {
                 // Extract just the package name from attr.path
                 let pkg_name = attr.split('.').last().unwrap_or(attr);
-                
+
                 results.push(SearchResult {
                     attr_name: attr.to_string(),
                     package: PackageInfo {
@@ -241,7 +253,8 @@ impl PackageResolver {
     /// Get package suggestions for a potentially misspelled package
     pub fn suggest(&self, package: &str) -> Vec<String> {
         let package_lower = package.to_lowercase();
-        let mut suggestions: Vec<_> = self.package_aliases
+        let mut suggestions: Vec<_> = self
+            .package_aliases
             .keys()
             .filter(|&k| {
                 // Simple Levenshtein-like suggestion: check if names are similar
@@ -250,7 +263,7 @@ impl PackageResolver {
             })
             .map(|&s| s.to_string())
             .collect();
-        
+
         suggestions.truncate(5);
         suggestions
     }

@@ -1,23 +1,23 @@
 //! Slop - AI-powered package manager for NixOS
-//! 
+//!
 //! Main application entry point and command handlers.
 
+mod ai_interpreter;
 mod cli;
 mod nix_config;
 mod package_resolver;
-mod ai_interpreter;
 mod rebuild;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
-use tracing::{info, debug, error};
+use tracing::{debug, error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use ai_interpreter::AiInterpreter;
 use cli::{Cli, Commands};
 use nix_config::NixConfig;
 use package_resolver::PackageResolver;
-use ai_interpreter::AiInterpreter;
-use rebuild::{RebuildExecutor, is_nixos};
+use rebuild::{is_nixos, RebuildExecutor};
 
 /// Application state
 pub struct App {
@@ -33,7 +33,9 @@ pub struct App {
 impl App {
     /// Create a new application instance
     pub fn new(cli: &Cli) -> Result<Self> {
-        let config_path = cli.config.as_ref()
+        let config_path = cli
+            .config
+            .as_ref()
             .map(|p| p.clone())
             .unwrap_or_else(|| "/etc/nixos/configuration.nix".to_string());
 
@@ -42,11 +44,7 @@ impl App {
 
         let resolver = PackageResolver::new();
         let interpreter = AiInterpreter::new(resolver.clone());
-        let executor = RebuildExecutor::new(
-            cli.dry_run,
-            cli.verbose,
-            !cli.yes,
-        );
+        let executor = RebuildExecutor::new(cli.dry_run, cli.verbose, !cli.yes);
 
         Ok(App {
             config,
@@ -76,7 +74,9 @@ impl App {
         info!("Installing package: {}", package);
 
         // Resolve the package name
-        let resolved = self.resolver.resolve(package)
+        let resolved = self
+            .resolver
+            .resolve(package)
             .context("Failed to resolve package name")?;
 
         if self.config.has_package(resolved) {
@@ -101,14 +101,13 @@ impl App {
         }
 
         // Backup current config
-        let backup_path = self.config.backup()
-            .with_context(|| {
-                if self.dry_run {
-                    "Would backup config".to_string()
-                } else {
-                    "Failed to backup configuration".to_string()
-                }
-            })?;
+        let backup_path = self.config.backup().with_context(|| {
+            if self.dry_run {
+                "Would backup config".to_string()
+            } else {
+                "Failed to backup configuration".to_string()
+            }
+        })?;
 
         if self.verbose {
             println!("{} Backup created: {:?}", "ℹ".blue(), backup_path);
@@ -134,21 +133,14 @@ impl App {
                 "→".yellow(),
                 resolved.green()
             );
-            println!(
-                "{} Would run: sudo nixos-rebuild switch",
-                "→".yellow()
-            );
+            println!("{} Would run: sudo nixos-rebuild switch", "→".yellow());
             return Ok(());
         }
 
         // Save configuration
-        self.config.save()
-            .context("Failed to save configuration")?;
+        self.config.save().context("Failed to save configuration")?;
 
-        println!(
-            "{} Configuration updated successfully",
-            "✓".green()
-        );
+        println!("{} Configuration updated successfully", "✓".green());
 
         // Rebuild system
         let result = self.executor.rebuild()?;
@@ -166,7 +158,9 @@ impl App {
         info!("Removing package: {}", package);
 
         // Resolve the package name
-        let resolved = self.resolver.resolve(package)
+        let resolved = self
+            .resolver
+            .resolve(package)
             .context("Failed to resolve package name")?;
 
         if !self.config.has_package(resolved) {
@@ -214,21 +208,14 @@ impl App {
                 "→".yellow(),
                 resolved.red()
             );
-            println!(
-                "{} Would run: sudo nixos-rebuild switch",
-                "→".yellow()
-            );
+            println!("{} Would run: sudo nixos-rebuild switch", "→".yellow());
             return Ok(());
         }
 
         // Save configuration
-        self.config.save()
-            .context("Failed to save configuration")?;
+        self.config.save().context("Failed to save configuration")?;
 
-        println!(
-            "{} Configuration updated successfully",
-            "✓".green()
-        );
+        println!("{} Configuration updated successfully", "✓".green());
 
         // Rebuild system
         let result = self.executor.rebuild()?;
@@ -252,7 +239,10 @@ impl App {
             return Ok(());
         }
 
-        println!("Found {} package(s):\n", results.len().to_string().green().bold());
+        println!(
+            "Found {} package(s):\n",
+            results.len().to_string().green().bold()
+        );
 
         for (i, result) in results.iter().take(10).enumerate() {
             println!(
@@ -366,7 +356,7 @@ fn init_logging(verbose: bool) {
         .with(
             tracing_subscriber::fmt::layer()
                 .without_time()
-                .with_target(false)
+                .with_target(false),
         )
         .with(filter)
         .init();

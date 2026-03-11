@@ -1,10 +1,10 @@
 //! AI Natural Language Interpreter
-//! 
+//!
 //! Converts natural language requests into package actions.
 //! Supports multiple LLM providers: OpenAI, Ollama, and OpenRouter.
 
 use crate::package_resolver::PackageResolver;
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -44,7 +44,7 @@ pub struct AiInterpreter {
 impl AiInterpreter {
     pub fn new(resolver: PackageResolver) -> Self {
         let api_key = std::env::var("SLOP_AI_API_KEY").ok();
-        
+
         // Determine provider from environment
         let provider = if let Ok(url) = std::env::var("SLOP_OLLAMA_URL") {
             LlmProvider::Ollama { url }
@@ -195,7 +195,9 @@ impl AiInterpreter {
 
     /// OpenAI API integration
     fn llm_openai(&self, request: &str) -> Result<AiAction> {
-        let api_key = self.api_key.as_ref()
+        let api_key = self
+            .api_key
+            .as_ref()
             .or_else(|| std::env::var("OPENAI_API_KEY").ok().as_ref())
             .context("No OpenAI API key configured. Set SLOP_AI_API_KEY or OPENAI_API_KEY")?;
 
@@ -207,12 +209,11 @@ impl AiInterpreter {
 
     /// Ollama API integration (local LLM)
     fn llm_ollama(&self, request: &str, url: &str) -> Result<AiAction> {
-        let model = std::env::var("SLOP_OLLAMA_MODEL")
-            .unwrap_or_else(|_| "llama3.2".to_string());
+        let model = std::env::var("SLOP_OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string());
 
         // Ollama uses a different API format
         let client = reqwest::blocking::Client::new();
-        
+
         let prompt = format!(
             r#"You are a NixOS package management assistant. Convert this request into a JSON action.
 
@@ -259,8 +260,8 @@ If unsure, use "search" action."#,
             response: String,
         }
 
-        let ollama_response: OllamaResponse = response.json()
-            .context("Failed to parse Ollama response")?;
+        let ollama_response: OllamaResponse =
+            response.json().context("Failed to parse Ollama response")?;
 
         self.parse_llm_json(&ollama_response.response)
     }
@@ -269,7 +270,9 @@ If unsure, use "search" action."#,
     fn llm_openrouter(&self, request: &str) -> Result<AiAction> {
         let api_key = std::env::var("SLOP_OPENROUTER_KEY")
             .or_else(|_| std::env::var("OPENROUTER_API_KEY"))
-            .context("No OpenRouter API key configured. Set SLOP_OPENROUTER_KEY or OPENROUTER_API_KEY")?;
+            .context(
+                "No OpenRouter API key configured. Set SLOP_OPENROUTER_KEY or OPENROUTER_API_KEY",
+            )?;
 
         let model = std::env::var("SLOP_OPENROUTER_MODEL")
             .unwrap_or_else(|_| "meta-llama/llama-3.2-3b-instruct:free".to_string());
@@ -280,7 +283,13 @@ If unsure, use "search" action."#,
     }
 
     /// Generic LLM API caller for OpenAI-compatible APIs
-    fn call_llm_api(&self, api_url: &str, api_key: &str, request: &str, model: &str) -> Result<AiAction> {
+    fn call_llm_api(
+        &self,
+        api_url: &str,
+        api_key: &str,
+        request: &str,
+        model: &str,
+    ) -> Result<AiAction> {
         self.call_llm_api_with_model(api_url, api_key, request, model, None)
     }
 
@@ -361,8 +370,7 @@ If unsure, use "search" action."#,
             content: String,
         }
 
-        let llm_response: LlmResponse = response.json()
-            .context("Failed to parse LLM response")?;
+        let llm_response: LlmResponse = response.json().context("Failed to parse LLM response")?;
 
         let content = llm_response
             .choices
@@ -389,7 +397,11 @@ If unsure, use "search" action."#,
         let action_str = parsed["action"].as_str().unwrap_or("search");
         let packages = parsed["packages"]
             .as_array()
-            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default();
         let confidence = parsed["confidence"].as_f64().unwrap_or(0.5) as f32;
 
@@ -429,7 +441,10 @@ mod tests {
         let interp = create_interpreter();
         let action = interp.interpret("i need a terminal editor").unwrap();
         assert_eq!(action.action, ActionType::Install);
-        assert!(action.packages.iter().any(|p| p.contains("nvim") || p.contains("vim")));
+        assert!(action
+            .packages
+            .iter()
+            .any(|p| p.contains("nvim") || p.contains("vim")));
     }
 
     #[test]
