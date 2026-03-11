@@ -57,7 +57,7 @@ impl NixConfig {
             let packages_block = caps.get(1).unwrap().as_str();
             let packages = packages_block
                 .lines()
-                .flat_map(|line| {
+                .map(|line| {
                     // Remove comments
                     line.split('#').next().unwrap_or("")
                 })
@@ -83,7 +83,7 @@ impl NixConfig {
 
         if let Some(caps) = re.captures(content) {
             let full_match = caps.get(0)?;
-            let packages_content = caps.get(2)?;
+            let _packages_content = caps.get(2)?;
 
             let start = full_match.start();
             let end = full_match.end();

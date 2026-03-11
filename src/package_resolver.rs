@@ -130,7 +130,7 @@ impl PackageResolver {
     }
 
     /// Resolve a natural name to a nixpkgs attribute name
-    pub fn resolve(&self, name: &str) -> Option<&str> {
+    pub fn resolve<'a>(&self, name: &'a str) -> Option<&'a str> {
         let name_lower = name.to_lowercase();
 
         // Check direct alias

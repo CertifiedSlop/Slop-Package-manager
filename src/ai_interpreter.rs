@@ -197,14 +197,14 @@ impl AiInterpreter {
     fn llm_openai(&self, request: &str) -> Result<AiAction> {
         let api_key = self
             .api_key
-            .as_ref()
-            .or_else(|| std::env::var("OPENAI_API_KEY").ok().as_ref())
+            .clone()
+            .or_else(|| std::env::var("OPENAI_API_KEY").ok())
             .context("No OpenAI API key configured. Set SLOP_AI_API_KEY or OPENAI_API_KEY")?;
 
         let api_url = std::env::var("SLOP_AI_API_URL")
             .unwrap_or_else(|_| "https://api.openai.com/v1/chat/completions".to_string());
 
-        self.call_llm_api(&api_url, api_key, request, "gpt-3.5-turbo")
+        self.call_llm_api(&api_url, &api_key, request, "gpt-3.5-turbo")
     }
 
     /// Ollama API integration (local LLM)

@@ -10,7 +10,7 @@ mod rebuild;
 
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use ai_interpreter::AiInterpreter;
@@ -65,7 +65,10 @@ impl App {
             Commands::Search { query } => self.search(query),
             Commands::Ai { request } => self.ai(request).await,
             Commands::List => self.list(),
-            Commands::Diff { add, remove } => self.show_diff(add.as_ref(), remove.as_ref()),
+            Commands::Diff { add, remove } => {
+                self.show_diff(add.as_ref(), remove.as_ref());
+                Ok(())
+            }
         }
     }
 
@@ -117,7 +120,8 @@ impl App {
         self.config.add_package(resolved)?;
 
         // Show diff
-        self.show_diff(&None, &Some(resolved.to_string()));
+        let res_str = resolved.to_string();
+        self.show_diff(None, Some(&res_str));
 
         // Confirm before applying
         if !self.skip_confirm && !self.dry_run {
@@ -192,7 +196,8 @@ impl App {
         }
 
         // Show diff
-        self.show_diff(&Some(resolved.to_string()), &None);
+        let res_str = resolved.to_string();
+        self.show_diff(Some(&res_str), None);
 
         // Confirm before applying
         if !self.skip_confirm && !self.dry_run {

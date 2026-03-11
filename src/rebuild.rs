@@ -2,7 +2,7 @@
 //!
 //! Handles running nixos-rebuild and related commands safely.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use colored::Colorize;
 use std::io::{self, Write};
 use std::path::Path;
@@ -171,14 +171,14 @@ impl RebuildExecutor {
 
         if !added.is_empty() {
             println!("\n{}", "Packages to install:".green().bold());
-            for pkg in added {
+            for pkg in &added {
                 println!("  {} {}", "+".green(), pkg.green());
             }
         }
 
         if !removed.is_empty() {
             println!("\n{}", "Packages to remove:".red().bold());
-            for pkg in removed {
+            for pkg in &removed {
                 println!("  {} {}", "-".red(), pkg.red());
             }
         }
@@ -240,11 +240,12 @@ impl RebuildExecutor {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
         let full_output = format!("{}\n{}", stdout, stderr);
+        let generation = self.extract_generation(&full_output);
 
         Ok(RebuildResult {
             success: output.status.success(),
             output: full_output,
-            generation: self.extract_generation(&full_output),
+            generation,
         })
     }
 }
