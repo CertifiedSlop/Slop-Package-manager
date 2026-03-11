@@ -1,10 +1,10 @@
 //! AI Natural Language Interpreter
 //! 
 //! Converts natural language requests into package actions.
-//! Uses a combination of pattern matching and optional LLM API.
+//! Supports multiple LLM providers: OpenAI, Ollama, and OpenRouter.
 
 use crate::package_resolver::PackageResolver;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -26,22 +26,38 @@ pub struct AiAction {
     pub original_request: String,
 }
 
+/// LLM Provider configuration
+#[derive(Debug, Clone)]
+pub enum LlmProvider {
+    OpenAI,
+    Ollama { url: String },
+    OpenRouter,
+}
+
 /// AI Interpreter that converts natural language to actions
 pub struct AiInterpreter {
     resolver: PackageResolver,
+    provider: LlmProvider,
     api_key: Option<String>,
-    api_url: Option<String>,
 }
 
 impl AiInterpreter {
     pub fn new(resolver: PackageResolver) -> Self {
         let api_key = std::env::var("SLOP_AI_API_KEY").ok();
-        let api_url = std::env::var("SLOP_AI_API_URL").ok();
+        
+        // Determine provider from environment
+        let provider = if let Ok(url) = std::env::var("SLOP_OLLAMA_URL") {
+            LlmProvider::Ollama { url }
+        } else if std::env::var("SLOP_OPENROUTER_KEY").is_ok() {
+            LlmProvider::OpenRouter
+        } else {
+            LlmProvider::OpenAI
+        };
 
         AiInterpreter {
             resolver,
+            provider,
             api_key,
-            api_url,
         }
     }
 
@@ -55,9 +71,11 @@ impl AiInterpreter {
         }
 
         // Fall back to LLM if configured
-        if self.api_key.is_some() {
-            if let Ok(action) = self.llm_interpret(request) {
-                return Ok(action);
+        match self.llm_interpret(request) {
+            Ok(action) => return Ok(action),
+            Err(e) => {
+                tracing::warn!("LLM interpretation failed: {}", e);
+                // Continue to default fallback
             }
         }
 
@@ -166,17 +184,41 @@ impl AiInterpreter {
         vec![query.to_string()]
     }
 
-    /// Use LLM API for interpretation (if configured)
+    /// Use LLM API for interpretation
     fn llm_interpret(&self, request: &str) -> Result<AiAction> {
-        let api_key = self.api_key.as_ref().context("No API key configured")?;
-        let api_url = self.api_url.as_ref().unwrap_or(&"https://api.openai.com/v1/chat/completions".to_string());
+        match &self.provider {
+            LlmProvider::OpenAI => self.llm_openai(request),
+            LlmProvider::Ollama { url } => self.llm_ollama(request, url),
+            LlmProvider::OpenRouter => self.llm_openrouter(request),
+        }
+    }
 
+    /// OpenAI API integration
+    fn llm_openai(&self, request: &str) -> Result<AiAction> {
+        let api_key = self.api_key.as_ref()
+            .or_else(|| std::env::var("OPENAI_API_KEY").ok().as_ref())
+            .context("No OpenAI API key configured. Set SLOP_AI_API_KEY or OPENAI_API_KEY")?;
+
+        let api_url = std::env::var("SLOP_AI_API_URL")
+            .unwrap_or_else(|_| "https://api.openai.com/v1/chat/completions".to_string());
+
+        self.call_llm_api(&api_url, api_key, request, "gpt-3.5-turbo")
+    }
+
+    /// Ollama API integration (local LLM)
+    fn llm_ollama(&self, request: &str, url: &str) -> Result<AiAction> {
+        let model = std::env::var("SLOP_OLLAMA_MODEL")
+            .unwrap_or_else(|_| "llama3.2".to_string());
+
+        // Ollama uses a different API format
+        let client = reqwest::blocking::Client::new();
+        
         let prompt = format!(
-            r#"You are a NixOS package management assistant. Convert this request into a JSON action:
+            r#"You are a NixOS package management assistant. Convert this request into a JSON action.
 
 Request: "{}"
 
-Respond with JSON in this format:
+Respond with ONLY valid JSON in this format:
 {{
     "action": "install" | "remove" | "search",
     "packages": ["package1", "package2"],
@@ -194,25 +236,114 @@ If unsure, use "search" action."#,
             request
         );
 
-        let client = reqwest::blocking::Client::new();
         let response = client
-            .post(api_url)
-            .header("Authorization", format!("Bearer {}", api_key))
+            .post(format!("{}/api/generate", url.trim_end_matches('/')))
             .header("Content-Type", "application/json")
             .json(&serde_json::json!({
-                "model": "gpt-3.5-turbo",
+                "model": model,
+                "prompt": prompt,
+                "stream": false,
+                "format": "json"
+            }))
+            .send()
+            .context("Failed to send request to Ollama API")?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().unwrap_or_default();
+            bail!("Ollama API returned error ({}): {}", status, body);
+        }
+
+        #[derive(Deserialize)]
+        struct OllamaResponse {
+            response: String,
+        }
+
+        let ollama_response: OllamaResponse = response.json()
+            .context("Failed to parse Ollama response")?;
+
+        self.parse_llm_json(&ollama_response.response)
+    }
+
+    /// OpenRouter API integration (multiple model providers)
+    fn llm_openrouter(&self, request: &str) -> Result<AiAction> {
+        let api_key = std::env::var("SLOP_OPENROUTER_KEY")
+            .or_else(|_| std::env::var("OPENROUTER_API_KEY"))
+            .context("No OpenRouter API key configured. Set SLOP_OPENROUTER_KEY or OPENROUTER_API_KEY")?;
+
+        let model = std::env::var("SLOP_OPENROUTER_MODEL")
+            .unwrap_or_else(|_| "meta-llama/llama-3.2-3b-instruct:free".to_string());
+
+        let api_url = "https://openrouter.ai/api/v1/chat/completions";
+
+        self.call_llm_api_with_model(api_url, &api_key, request, &model, Some("slop"))
+    }
+
+    /// Generic LLM API caller for OpenAI-compatible APIs
+    fn call_llm_api(&self, api_url: &str, api_key: &str, request: &str, model: &str) -> Result<AiAction> {
+        self.call_llm_api_with_model(api_url, api_key, request, model, None)
+    }
+
+    fn call_llm_api_with_model(
+        &self,
+        api_url: &str,
+        api_key: &str,
+        request: &str,
+        model: &str,
+        app_name: Option<&str>,
+    ) -> Result<AiAction> {
+        let prompt = format!(
+            r#"You are a NixOS package management assistant. Convert this request into a JSON action.
+
+Request: "{}"
+
+Respond with ONLY valid JSON in this format:
+{{
+    "action": "install" | "remove" | "search",
+    "packages": ["package1", "package2"],
+    "confidence": 0.0-1.0
+}}
+
+Common NixOS packages:
+- Browsers: firefox, chromium, google-chrome, brave
+- Editors: neovim, vim, emacs, vscode
+- Terminals: alacritty, kitty, wezterm, foot
+- Shells: zsh, fish, bash, nushell
+- Tools: git, htop, tree, ripgrep, fzf, bat
+
+If unsure, use "search" action."#,
+            request
+        );
+
+        let mut client_builder = reqwest::blocking::Client::new()
+            .post(api_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .header("Content-Type", "application/json");
+
+        // Add OpenRouter-specific headers
+        if let Some(app) = app_name {
+            client_builder = client_builder
+                .header("HTTP-Referer", "https://github.com/yourusername/slop")
+                .header("X-Title", app);
+        }
+
+        let response = client_builder
+            .json(&serde_json::json!({
+                "model": model,
                 "messages": [
-                    {"role": "system", "content": "You are a helpful NixOS package assistant. Always respond with valid JSON."},
+                    {"role": "system", "content": "You are a helpful NixOS package assistant. Always respond with valid JSON only, no markdown formatting."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.3,
-                "max_tokens": 100
+                "max_tokens": 150
             }))
             .send()
             .context("Failed to send request to LLM API")?;
 
         if !response.status().is_success() {
-            anyhow::bail!("LLM API returned error: {}", response.status());
+            let status = response.status();
+            let body = response.text().unwrap_or_default();
+            bail!("LLM API returned error ({}): {}", status, body);
         }
 
         #[derive(Deserialize)]
@@ -239,15 +370,21 @@ If unsure, use "search" action."#,
             .map(|c| c.message.content.as_str())
             .context("Empty LLM response")?;
 
-        // Extract JSON from response (might be wrapped in markdown)
+        self.parse_llm_json(content)
+    }
+
+    /// Parse JSON response from LLM
+    fn parse_llm_json(&self, content: &str) -> Result<AiAction> {
+        // Extract JSON from response (might be wrapped in markdown or have extra text)
         let json_str = content
+            .trim()
             .trim_start_matches("```json")
             .trim_start_matches("```")
             .trim_end_matches("```")
             .trim();
 
         let parsed: serde_json::Value = serde_json::from_str(json_str)
-            .context("Failed to parse LLM JSON")?;
+            .with_context(|| format!("Failed to parse LLM JSON: {}", content))?;
 
         let action_str = parsed["action"].as_str().unwrap_or("search");
         let packages = parsed["packages"]
@@ -266,7 +403,7 @@ If unsure, use "search" action."#,
             action,
             packages,
             confidence,
-            original_request: request.to_string(),
+            original_request: String::new(), // Will be set by caller
         })
     }
 }

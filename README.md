@@ -199,15 +199,46 @@ $ slop --dry-run install firefox
 
 ### AI API Integration (Optional)
 
-For enhanced AI interpretation using LLMs:
+Slop supports multiple LLM providers for AI commands. Without any configuration, slop uses pattern matching (works offline!).
+
+#### OpenAI
 
 ```bash
-# Set environment variables
 export SLOP_AI_API_KEY="sk-..."
 export SLOP_AI_API_URL="https://api.openai.com/v1/chat/completions"
+# Or simply:
+export OPENAI_API_KEY="sk-..."
 ```
 
-Without API keys, slop uses pattern matching (works offline!).
+#### Ollama (Local LLM - Free, Private)
+
+```bash
+# Install Ollama: https://ollama.ai
+ollama pull llama3.2
+
+# Configure slop to use Ollama
+export SLOP_OLLAMA_URL="http://localhost:11434"
+export SLOP_OLLAMA_MODEL="llama3.2"
+```
+
+#### OpenRouter (Multiple Models, Pay-per-use)
+
+```bash
+# Get API key: https://openrouter.ai
+export SLOP_OPENROUTER_KEY="sk-or-..."
+export SLOP_OPENROUTER_MODEL="meta-llama/llama-3.2-3b-instruct:free"
+# Or:
+export OPENROUTER_API_KEY="sk-or-..."
+```
+
+### Provider Comparison
+
+| Provider | Cost | Privacy | Speed | Quality |
+|----------|------|---------|-------|---------|
+| Pattern Matching | Free | ✅ Local | ⚡ Instant | Basic |
+| Ollama (local) | Free | ✅ Local | 🐛 Depends on GPU | Good |
+| OpenRouter | $/req | ⚠️ Cloud | ⚡ Fast | Excellent |
+| OpenAI | $/req | ⚠️ Cloud | ⚡ Fast | Excellent |
 
 ### Example configuration.nix
 
