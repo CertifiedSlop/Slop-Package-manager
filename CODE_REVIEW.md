@@ -1,0 +1,75 @@
+# Code Review Guidelines
+
+## For Reviewers
+
+### Checklist
+
+- [ ] **Code Quality**
+  - Code follows Rust style guidelines
+  - No clippy warnings (`cargo clippy -- -D warnings`)
+  - Code is formatted (`cargo fmt`)
+  - Functions are appropriately sized
+
+- [ ] **Functionality**
+  - Feature works as described
+  - Edge cases are handled
+  - Error handling is appropriate
+  - No breaking changes (or properly documented)
+
+- [ ] **Testing**
+  - Tests are included for new functionality
+  - Existing tests still pass
+  - Test coverage is adequate
+
+- [ ] **Documentation**
+  - Public functions have doc comments
+  - README is updated (if needed)
+  - CHANGELOG is updated
+  - Examples are provided (if needed)
+
+- [ ] **Security**
+  - No sensitive data exposure
+  - Input validation is present
+  - No new security vulnerabilities
+
+### Review Response Time
+
+- Aim to review within 48 hours
+- Be constructive and helpful
+- Explain the "why" behind suggestions
+
+## For Authors
+
+### Before Requesting Review
+
+1. Run all checks:
+   ```bash
+   cargo fmt
+   cargo clippy -- -D warnings
+   cargo test
+   ```
+
+2. Update documentation:
+   - Code comments
+   - README (if user-facing change)
+   - CHANGELOG
+
+3. Write clear commit messages
+
+### During Review
+
+- Respond to all comments
+- Make requested changes promptly
+- Ask for clarification if needed
+- Be open to feedback
+
+## Merging
+
+- All CI checks must pass
+- At least one approval required
+- Author should not merge their own PR (if possible)
+- Squash commits for clean history
+
+---
+
+Thank you for maintaining code quality! 🦀
