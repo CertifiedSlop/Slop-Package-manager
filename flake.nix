@@ -40,7 +40,7 @@
 
           meta = with pkgs.lib; {
             description = "AI-powered package manager for NixOS";
-            homepage = "https://github.com/yourusername/slop";
+            homepage = "https://github.com/CertifiedSlop/Slop-Package-manager";
             license = licenses.mit;
             maintainers = [ maintainers.yourusername ];
             mainProgram = "slop";

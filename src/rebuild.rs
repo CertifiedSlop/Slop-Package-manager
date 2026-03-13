@@ -33,6 +33,21 @@ impl RebuildExecutor {
         }
     }
 
+    /// Check if dry_run is enabled
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run
+    }
+
+    /// Check if verbose mode is enabled
+    pub fn is_verbose(&self) -> bool {
+        self.verbose
+    }
+
+    /// Check if interactive mode is enabled
+    pub fn is_interactive(&self) -> bool {
+        self.interactive
+    }
+
     /// Run nixos-rebuild switch
     pub fn rebuild(&self) -> Result<RebuildResult> {
         if self.dry_run {

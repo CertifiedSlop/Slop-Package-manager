@@ -22,12 +22,12 @@ This project adheres to the [Rust Code of Conduct](https://www.rust-lang.org/pol
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/slop.git
+   git clone https://github.com/CertifiedSlop/Slop-Package-manager.git
    cd slop
    ```
 3. **Add upstream** remote:
    ```bash
-   git remote add upstream https://github.com/yourusername/slop.git
+   git remote add upstream https://github.com/CertifiedSlop/Slop-Package-manager.git
    ```
 
 ## Development Setup
@@ -51,7 +51,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 sudo apt-get install -y pkg-config libssl-dev
 
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/slop.git
+git clone https://github.com/CertifiedSlop/Slop-Package-manager.git
 cd slop
 
 # Build the project
@@ -67,7 +67,7 @@ cargo test
 
 - Look for issues labeled `good first issue` for beginner-friendly tasks
 - Issues labeled `help wanted` need community contributions
-- Check the [project board](https://github.com/yourusername/slop/projects) for ongoing work
+- Check the [project board](https://github.com/CertifiedSlop/Slop-Package-manager/projects) for ongoing work
 
 ### Creating a Branch
 
@@ -258,8 +258,8 @@ Releases are managed by maintainers:
 
 ## Getting Help
 
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/slop/discussions)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/slop/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/CertifiedSlop/Slop-Package-manager/discussions)
+- **Issues**: [GitHub Issues](https://github.com/CertifiedSlop/Slop-Package-manager/issues)
 - **Matrix/Chat**: (if applicable)
 
 ## Thank You!

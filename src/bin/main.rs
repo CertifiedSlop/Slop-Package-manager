@@ -2,22 +2,17 @@
 //!
 //! Main application entry point and command handlers.
 
-mod ai_interpreter;
-mod cli;
-mod nix_config;
-mod package_resolver;
-mod rebuild;
-
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use ai_interpreter::AiInterpreter;
-use cli::{Cli, Commands};
-use nix_config::NixConfig;
-use package_resolver::PackageResolver;
-use rebuild::{is_nixos, RebuildExecutor};
+use slop::ai_interpreter::{ActionType, AiInterpreter};
+use slop::cli::{Cli, Commands, FlakeCommands};
+use slop::flake_manager::Flake;
+use slop::nix_config::NixConfig;
+use slop::package_resolver::PackageResolver;
+use slop::rebuild::{is_nixos, RebuildExecutor};
 
 /// Application state
 pub struct App {
@@ -68,6 +63,15 @@ impl App {
                 self.show_diff(add.as_ref(), remove.as_ref());
                 Ok(())
             }
+            Commands::Update { flake, input } => {
+                if *flake {
+                    self.update_flake(input.as_deref()).await
+                } else {
+                    self.update_packages().await
+                }
+            }
+            Commands::Flake { action } => self.flake_command(action).await,
+            Commands::Completions { shell } => Self::generate_completions(shell),
         }
     }
 
@@ -287,22 +291,22 @@ impl App {
         println!("Packages: {}", action.packages.join(", ").cyan());
 
         match action.action {
-            ai_interpreter::ActionType::Install => {
+            ActionType::Install => {
                 for package in &action.packages {
                     self.install(package).await?;
                 }
             }
-            ai_interpreter::ActionType::Remove => {
+            ActionType::Remove => {
                 for package in &action.packages {
                     self.remove(package).await?;
                 }
             }
-            ai_interpreter::ActionType::Search => {
+            ActionType::Search => {
                 for package in &action.packages {
                     self.search(package)?;
                 }
             }
-            ai_interpreter::ActionType::Unknown => {
+            ActionType::Unknown => {
                 println!("{}", "Could not determine action.".yellow());
             }
         }
@@ -347,6 +351,227 @@ impl App {
         }
 
         self.executor.show_diff(old_packages, &new_packages);
+    }
+
+    /// Update all packages (placeholder - full implementation would check for updates)
+    async fn update_packages(&self) -> Result<()> {
+        println!(
+            "{} Checking for package updates...",
+            "🔄".blue()
+        );
+
+        if self.dry_run {
+            println!(
+                "{} Would update all packages in environment.systemPackages",
+                "→".yellow()
+            );
+            println!("{} Would run: sudo nixos-rebuild switch --upgrade", "→".yellow());
+            return Ok(());
+        }
+
+        println!(
+            "{} Note: Full package updates require running nixos-rebuild with --upgrade flag.",
+            "ℹ".blue()
+        );
+        println!(
+            "{} Run: sudo nixos-rebuild switch --upgrade",
+            "💡".yellow()
+        );
+
+        Ok(())
+    }
+
+    /// Update flake inputs
+    async fn update_flake(&self, input: Option<&str>) -> Result<()> {
+        use slop::flake_manager::update_flake_inputs;
+
+        let flake_path = Flake::default_path();
+
+        if !Flake::exists(&flake_path) {
+            bail!("No flake.nix found in current directory");
+        }
+
+        println!("{} Updating flake inputs...", "🔄".blue());
+
+        if self.dry_run {
+            if let Some(inp) = input {
+                println!("{} Would update input: {}", "→".yellow(), inp);
+            } else {
+                println!("{} Would update all flake inputs", "→".yellow());
+            }
+            return Ok(());
+        }
+
+        let output = update_flake_inputs(&flake_path, input.is_none())?;
+
+        if !output.is_empty() {
+            println!("{}", output);
+        }
+
+        println!("{} Flake inputs updated successfully", "✓".green());
+
+        Ok(())
+    }
+
+    /// Handle flake management commands
+    async fn flake_command(&self, action: &FlakeCommands) -> Result<()> {
+        let flake_path = Flake::default_path();
+
+        match action {
+            FlakeCommands::Add { name, url } => {
+                if !Flake::exists(&flake_path) {
+                    bail!("No flake.nix found in current directory");
+                }
+
+                let mut flake = Flake::load(&flake_path)?;
+
+                if flake.has_input(name) {
+                    println!(
+                        "{} Input '{}' already exists",
+                        "ℹ".blue(),
+                        name.yellow()
+                    );
+                    return Ok(());
+                }
+
+                if self.dry_run {
+                    println!(
+                        "{} Would add input '{}' with URL '{}'",
+                        "→".yellow(),
+                        name,
+                        url
+                    );
+                    return Ok(());
+                }
+
+                flake.add_input(name, url)?;
+                flake.save()?;
+
+                println!(
+                    "{} Added flake input '{}' successfully",
+                    "✓".green(),
+                    name.green()
+                );
+            }
+            FlakeCommands::Remove { name } => {
+                if !Flake::exists(&flake_path) {
+                    bail!("No flake.nix found in current directory");
+                }
+
+                let mut flake = Flake::load(&flake_path)?;
+
+                if !flake.has_input(name) {
+                    println!(
+                        "{} Input '{}' not found",
+                        "ℹ".blue(),
+                        name.yellow()
+                    );
+                    return Ok(());
+                }
+
+                if self.dry_run {
+                    println!("{} Would remove input: {}", "→".yellow(), name);
+                    return Ok(());
+                }
+
+                flake.remove_input(name)?;
+                flake.save()?;
+
+                println!(
+                    "{} Removed flake input '{}' successfully",
+                    "✓".green(),
+                    name.green()
+                );
+            }
+            FlakeCommands::Update { name } => {
+                if !Flake::exists(&flake_path) {
+                    bail!("No flake.nix found in current directory");
+                }
+
+                if self.dry_run {
+                    if let Some(inp) = name {
+                        println!("{} Would update input: {}", "→".yellow(), inp);
+                    } else {
+                        println!("{} Would update all flake inputs", "→".yellow());
+                    }
+                    return Ok(());
+                }
+
+                use slop::flake_manager::update_flake_inputs;
+                let output = update_flake_inputs(&flake_path, name.is_none())?;
+
+                if !output.is_empty() {
+                    println!("{}", output);
+                }
+
+                println!("{} Flake inputs updated successfully", "✓".green());
+            }
+            FlakeCommands::Lock => {
+                if !Flake::exists(&flake_path) {
+                    bail!("No flake.nix found in current directory");
+                }
+
+                if self.dry_run {
+                    println!("{} Would lock flake inputs", "→".yellow());
+                    return Ok(());
+                }
+
+                use slop::flake_manager::lock_flake_inputs;
+                lock_flake_inputs(&flake_path)?;
+
+                println!("{} Flake inputs locked successfully", "✓".green());
+            }
+            FlakeCommands::List => {
+                if !Flake::exists(&flake_path) {
+                    bail!("No flake.nix found in current directory");
+                }
+
+                let flake = Flake::load(&flake_path)?;
+
+                if let Some(desc) = &flake.description {
+                    println!("{} {}\n", "📦".blue(), desc.bold());
+                }
+
+                if flake.inputs.is_empty() {
+                    println!("{}", "No flake inputs found.".yellow());
+                } else {
+                    println!("{} Flake inputs:\n", "📋".blue());
+                    for input in &flake.inputs {
+                        println!(
+                            "  • {} {} {}",
+                            input.name.green(),
+                            "→".dimmed(),
+                            input.url.dimmed()
+                        );
+                        if let Some(follows) = &input.follows {
+                            println!("    {} follows: {}", "↳".dimmed(), follows.dimmed());
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl App {
+    /// Generate shell completions
+    fn generate_completions(shell: &str) -> Result<()> {
+        use clap::CommandFactory;
+        use std::io;
+
+        let mut cmd = Cli::command();
+        let shell = shell.parse::<clap_complete::Shell>().unwrap_or(clap_complete::Shell::Bash);
+
+        clap_complete::generate(
+            shell,
+            &mut cmd,
+            "slop",
+            &mut io::stdout(),
+        );
+
+        Ok(())
     }
 }
 

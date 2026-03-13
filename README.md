@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[![CI](https://github.com/yourusername/slop/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/slop/actions/workflows/ci.yml)
+[![CI](https://github.com/CertifiedSlop/Slop-Package-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/CertifiedSlop/Slop-Package-manager/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org)
 [![NixOS](https://img.shields.io/badge/NixOS-unstable-blue.svg)](https://nixos.org)
@@ -48,7 +48,7 @@ And slop will automatically:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/slop.git
+git clone https://github.com/CertifiedSlop/Slop-Package-manager.git
 cd slop
 
 # Build in release mode
@@ -305,8 +305,18 @@ export OPENROUTER_API_KEY="sk-or-..."
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/yourusername/slop.git
+git clone https://github.com/CertifiedSlop/Slop-Package-manager.git
 cd slop
+
+# Option 1: Using nix-shell (recommended for Nix users)
+nix-shell shell.nix
+
+# Option 2: Using nix develop (flakes)
+nix develop
+
+# Option 3: Manual setup
+# Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Install dependencies (Ubuntu/Debian): sudo apt-get install -y pkg-config libssl-dev
 
 # Build
 cargo build
@@ -390,7 +400,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
 # Fork and clone
-git clone https://github.com/YOUR_USERNAME/slop.git
+git clone https://github.com/CertifiedSlop/Slop-Package-manager.git
 
 # Create a branch
 git checkout -b feature/my-feature
@@ -417,8 +427,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 📮 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/slop/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/slop/discussions)
+- **Issues**: [GitHub Issues](https://github.com/CertifiedSlop/Slop-Package-manager/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/CertifiedSlop/Slop-Package-manager/discussions)
 
 ---
 

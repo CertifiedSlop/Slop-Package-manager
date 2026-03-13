@@ -69,6 +69,61 @@ pub enum Commands {
         #[arg(short, long)]
         remove: Option<String>,
     },
+
+    /// Update packages or flake inputs
+    Update {
+        /// Update flake inputs instead of packages
+        #[arg(short, long)]
+        flake: bool,
+
+        /// Specific input to update (for flake updates)
+        #[arg(short, long)]
+        input: Option<String>,
+    },
+
+    /// Manage flake inputs
+    Flake {
+        #[command(subcommand)]
+        action: FlakeCommands,
+    },
+
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for (bash, elvish, fish, powershell, zsh)
+        #[arg(short, long)]
+        shell: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum FlakeCommands {
+    /// Add a new flake input
+    Add {
+        /// Input name
+        name: String,
+
+        /// Input URL (e.g., github:nixos/nixpkgs/nixos-unstable)
+        #[arg(short, long)]
+        url: String,
+    },
+
+    /// Remove a flake input
+    Remove {
+        /// Input name to remove
+        name: String,
+    },
+
+    /// Update flake inputs
+    Update {
+        /// Specific input to update (updates all if not specified)
+        name: Option<String>,
+    },
+
+    /// Lock flake inputs
+    Lock,
+
+    /// List flake inputs
+    List,
 }
 
 impl Cli {
