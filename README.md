@@ -65,7 +65,7 @@ sudo cp target/release/slop /usr/local/bin/
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    slop.url = "github:yourusername/slop";
+    slop.url = "github:CertifiedSlop/Slop-Package-manager";
   };
 
   outputs = { self, nixpkgs, slop }: {

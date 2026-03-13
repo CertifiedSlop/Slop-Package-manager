@@ -152,7 +152,10 @@ mod package_resolver_tests {
         let resolver = PackageResolver::new();
 
         // Unknown packages should return as-is
-        assert_eq!(resolver.resolve("unknownpackage123"), Some("unknownpackage123"));
+        assert_eq!(
+            resolver.resolve("unknownpackage123"),
+            Some("unknownpackage123")
+        );
     }
 
     #[test]

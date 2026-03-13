@@ -355,17 +355,17 @@ impl App {
 
     /// Update all packages (placeholder - full implementation would check for updates)
     async fn update_packages(&self) -> Result<()> {
-        println!(
-            "{} Checking for package updates...",
-            "🔄".blue()
-        );
+        println!("{} Checking for package updates...", "🔄".blue());
 
         if self.dry_run {
             println!(
                 "{} Would update all packages in environment.systemPackages",
                 "→".yellow()
             );
-            println!("{} Would run: sudo nixos-rebuild switch --upgrade", "→".yellow());
+            println!(
+                "{} Would run: sudo nixos-rebuild switch --upgrade",
+                "→".yellow()
+            );
             return Ok(());
         }
 
@@ -373,10 +373,7 @@ impl App {
             "{} Note: Full package updates require running nixos-rebuild with --upgrade flag.",
             "ℹ".blue()
         );
-        println!(
-            "{} Run: sudo nixos-rebuild switch --upgrade",
-            "💡".yellow()
-        );
+        println!("{} Run: sudo nixos-rebuild switch --upgrade", "💡".yellow());
 
         Ok(())
     }
@@ -426,11 +423,7 @@ impl App {
                 let mut flake = Flake::load(&flake_path)?;
 
                 if flake.has_input(name) {
-                    println!(
-                        "{} Input '{}' already exists",
-                        "ℹ".blue(),
-                        name.yellow()
-                    );
+                    println!("{} Input '{}' already exists", "ℹ".blue(), name.yellow());
                     return Ok(());
                 }
 
@@ -461,11 +454,7 @@ impl App {
                 let mut flake = Flake::load(&flake_path)?;
 
                 if !flake.has_input(name) {
-                    println!(
-                        "{} Input '{}' not found",
-                        "ℹ".blue(),
-                        name.yellow()
-                    );
+                    println!("{} Input '{}' not found", "ℹ".blue(), name.yellow());
                     return Ok(());
                 }
 
@@ -562,14 +551,11 @@ impl App {
         use std::io;
 
         let mut cmd = Cli::command();
-        let shell = shell.parse::<clap_complete::Shell>().unwrap_or(clap_complete::Shell::Bash);
+        let shell = shell
+            .parse::<clap_complete::Shell>()
+            .unwrap_or(clap_complete::Shell::Bash);
 
-        clap_complete::generate(
-            shell,
-            &mut cmd,
-            "slop",
-            &mut io::stdout(),
-        );
+        clap_complete::generate(shell, &mut cmd, "slop", &mut io::stdout());
 
         Ok(())
     }

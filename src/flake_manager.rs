@@ -59,14 +59,16 @@ impl Flake {
         let mut seen_names = std::collections::HashSet::new();
 
         // Match inputs = { ... };
-        let inputs_re = Regex::new(r"(?s)inputs\s*=\s*\{([^}]+)\}").ok()
+        let inputs_re = Regex::new(r"(?s)inputs\s*=\s*\{([^}]+)\}")
+            .ok()
             .context("Failed to compile regex")?;
 
         if let Some(caps) = inputs_re.captures(content) {
             let inputs_block = caps.get(1).unwrap().as_str();
 
             // Match complex inputs: name.url = "..." (name can contain hyphens)
-            let complex_re = Regex::new(r#"([\w-]+)\.url\s*=\s*"([^"]+)""#).ok()
+            let complex_re = Regex::new(r#"([\w-]+)\.url\s*=\s*"([^"]+)""#)
+                .ok()
                 .context("Failed to compile complex input regex")?;
 
             for caps in complex_re.captures_iter(inputs_block) {
@@ -91,7 +93,10 @@ impl Flake {
         let outputs_re = Regex::new(r"(?s)outputs\s*=\s*\{[^}]+\}:").ok();
         if let Some(re) = outputs_re {
             if let Some(caps) = re.captures(content) {
-                return caps.get(0).map(|m| m.as_str().to_string()).unwrap_or_default();
+                return caps
+                    .get(0)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_default();
             }
         }
         String::new()
@@ -109,7 +114,8 @@ impl Flake {
         }
 
         // Find the inputs section and add the new input
-        let inputs_re = Regex::new(r"(?s)(inputs\s*=\s*\{)([^}]*)(\})").ok()
+        let inputs_re = Regex::new(r"(?s)(inputs\s*=\s*\{)([^}]*)(\})")
+            .ok()
             .context("Failed to compile regex")?;
 
         if let Some(caps) = inputs_re.captures(&self.content) {
@@ -147,17 +153,26 @@ impl Flake {
 
         // Remove the input line - complex format: name.url = "..."
         let pattern = format!(r#"(?m)\s*{}\.url\s*=\s*"[^"]+";?\s*"#, regex::escape(name));
-        let input_re = Regex::new(&pattern).ok().context("Failed to compile regex")?;
+        let input_re = Regex::new(&pattern)
+            .ok()
+            .context("Failed to compile regex")?;
         self.content = input_re.replace_all(&self.content, "").to_string();
 
         // Also remove simple format: name = "..."
         let simple_pattern = format!(r#"(?m)\s*{}\s*=\s*"[^"]+";?\s*"#, regex::escape(name));
-        let simple_re = Regex::new(&simple_pattern).ok().context("Failed to compile regex")?;
+        let simple_re = Regex::new(&simple_pattern)
+            .ok()
+            .context("Failed to compile regex")?;
         self.content = simple_re.replace_all(&self.content, "").to_string();
 
         // Also remove from follows references
-        let follows_pattern = format!(r#"(?m)\s*{}\.follows\s*=\s*"[^"]+";?\s*"#, regex::escape(name));
-        let follows_re = Regex::new(&follows_pattern).ok().context("Failed to compile regex")?;
+        let follows_pattern = format!(
+            r#"(?m)\s*{}\.follows\s*=\s*"[^"]+";?\s*"#,
+            regex::escape(name)
+        );
+        let follows_re = Regex::new(&follows_pattern)
+            .ok()
+            .context("Failed to compile regex")?;
         self.content = follows_re.replace_all(&self.content, "").to_string();
 
         self.inputs.retain(|input| input.name != name);
@@ -172,7 +187,9 @@ impl Flake {
         }
 
         let pattern = format!(r#"({}\.url\s*=\s*)"[^"]+""#, regex::escape(name));
-        let input_re = Regex::new(&pattern).ok().context("Failed to compile regex")?;
+        let input_re = Regex::new(&pattern)
+            .ok()
+            .context("Failed to compile regex")?;
 
         self.content = input_re
             .replace_all(&self.content, &format!("${{1}}\"{}\"", new_url))
@@ -188,13 +205,11 @@ impl Flake {
     /// Add inputs section if it doesn't exist
     fn add_inputs_section(&mut self, name: &str, url: &str) -> Result<()> {
         // Find the description line or the beginning of the file
-        let insert_re = Regex::new(r#"(?m)^(description\s*=\s*"[^"]+";)"#).ok()
+        let insert_re = Regex::new(r#"(?m)^(description\s*=\s*"[^"]+";)"#)
+            .ok()
             .context("Failed to compile regex")?;
 
-        let new_section = format!(
-            "\n  inputs = {{\n    {}.url = \"{}\";\n  }};",
-            name, url
-        );
+        let new_section = format!("\n  inputs = {{\n    {}.url = \"{}\";\n  }};", name, url);
 
         if let Some(caps) = insert_re.captures(&self.content) {
             let insert_pos = caps.get(1).unwrap().end();
@@ -261,9 +276,7 @@ pub fn update_flake_inputs<P: AsRef<Path>>(flake_path: P, flake_registry: bool) 
 
     cmd.current_dir(parent_dir);
 
-    let output = cmd
-        .output()
-        .context("Failed to run nix flake update")?;
+    let output = cmd.output().context("Failed to run nix flake update")?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -328,7 +341,10 @@ mod tests {
 
         let flake = Flake::load(&flake_path).unwrap();
 
-        assert_eq!(flake.description, Some("My NixOS configuration".to_string()));
+        assert_eq!(
+            flake.description,
+            Some("My NixOS configuration".to_string())
+        );
         assert_eq!(flake.inputs.len(), 2);
         assert!(flake.has_input("nixpkgs"));
         assert!(flake.has_input("flake-utils"));
@@ -340,7 +356,9 @@ mod tests {
         let flake_path = create_test_flake(&dir, SAMPLE_FLAKE);
 
         let mut flake = Flake::load(&flake_path).unwrap();
-        flake.add_input("home-manager", "github:nix-community/home-manager").unwrap();
+        flake
+            .add_input("home-manager", "github:nix-community/home-manager")
+            .unwrap();
 
         assert!(flake.has_input("home-manager"));
         assert_eq!(flake.inputs.len(), 3);
@@ -364,7 +382,9 @@ mod tests {
         let flake_path = create_test_flake(&dir, SAMPLE_FLAKE);
 
         let mut flake = Flake::load(&flake_path).unwrap();
-        let updated = flake.update_input("nixpkgs", "github:nixos/nixpkgs/nixos-23.11").unwrap();
+        let updated = flake
+            .update_input("nixpkgs", "github:nixos/nixpkgs/nixos-23.11")
+            .unwrap();
 
         assert!(updated);
         assert!(flake.content.contains("github:nixos/nixpkgs/nixos-23.11"));
