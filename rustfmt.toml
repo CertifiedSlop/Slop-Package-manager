@@ -13,7 +13,7 @@ merge_derives = true
 use_try_shorthand = true
 use_field_init_shorthand = true
 force_explicit_abi = true
-imports_granularity = "Crate"
+
 
 # Clippy settings (via rust-toolchain.toml and CI)
 # Run with: cargo clippy -- -D warnings
