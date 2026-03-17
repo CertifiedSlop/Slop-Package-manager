@@ -425,6 +425,44 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [tokio](https://tokio.rs) - Async runtime
 - [dialoguer](https://github.com/console-rs/dialoguer) - Interactive prompts
 
+## 🚧 To-Do / Roadmap
+
+### 🏠 Home-Manager Integration
+- [ ] Auto home-manager management - AI detects and manages user-specific configs
+- [ ] Automatic home.nix creation and integration with system config
+- [ ] Smart dotfile synchronization between system and home-manager
+- [ ] AI-powered home-manager module recommendations based on installed packages
+
+### 🤖 AI Enhancements
+- [ ] Context-aware AI suggestions based on existing configuration
+- [ ] AI-driven dependency resolution and conflict detection
+- [ ] Natural language rollback: `"undo my last change"`
+- [ ] AI configuration optimizer: `"optimize my config for performance"`
+
+### 📦 Advanced Package Management
+- [ ] Overlay management with AI assistance
+- [ ] Custom package repository integration
+- [ ] Version pinning and automatic updates
+- [ ] Security vulnerability scanning for packages
+
+### ⚙️ NixOS Module Management
+- [ ] Auto-enable related modules (installing docker suggests container tools)
+- [ ] Service configuration wizard via AI
+- [ ] Hardware detection and automatic module configuration
+- [ ] Network manager auto-configuration
+
+### 🔄 System State Management
+- [ ] Generation browsing and selective rollback
+- [ ] Configuration snapshots with labels
+- [ ] Multi-system configuration sync
+- [ ] Backup strategy automation
+
+### 🎯 Quality of Life Features
+- [ ] Interactive configuration editor with AI autocomplete
+- [ ] Config linting and best practice suggestions
+- [ ] Performance profiling and optimization tips
+- [ ] Migration assistant from other package managers
+
 ## 📮 Contact
 
 - **Issues**: [GitHub Issues](https://github.com/CertifiedSlop/Slop-Package-manager/issues)
