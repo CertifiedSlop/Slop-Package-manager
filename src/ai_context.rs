@@ -5,9 +5,9 @@
 
 use crate::nix_config::NixConfig;
 use crate::package_resolver::PackageResolver;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::Path;
 
 /// Represents the current state of the system
@@ -361,7 +361,7 @@ impl AiContext {
     /// Suggest packages based on context
     pub fn suggest_packages(
         &self,
-        resolver: &PackageResolver,
+        _resolver: &PackageResolver,
         intent: &str,
     ) -> Vec<(String, String)> {
         let mut suggestions = Vec::new();
@@ -418,14 +418,14 @@ impl AiContext {
         for package in packages {
             // Check for conflicting packages
             if package.contains("vim") && self.context.installed_packages.contains("neovim") {
-                conflicts.push(format!(
-                    "Both vim and neovim will be installed. Consider using only one."
-                ));
+                conflicts.push(
+                    "Both vim and neovim will be installed. Consider using only one.".to_string(),
+                );
             }
             if package.contains("neovim") && self.context.installed_packages.contains("vim") {
-                conflicts.push(format!(
-                    "Both neovim and vim will be installed. Consider using only one."
-                ));
+                conflicts.push(
+                    "Both neovim and vim will be installed. Consider using only one.".to_string(),
+                );
             }
             if package.contains("firefox")
                 && (self.context.installed_packages.contains("chromium")

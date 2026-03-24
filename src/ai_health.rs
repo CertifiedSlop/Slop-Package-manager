@@ -2,7 +2,7 @@
 //!
 //! System health analysis and maintenance recommendations.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -73,7 +73,7 @@ impl HealthChecker {
     /// Run a full health check
     pub fn run_check(&self) -> Result<HealthReport> {
         let mut categories = Vec::new();
-        let mut recommendations = Vec::new();
+        let recommendations = Vec::new();
         let mut total_score = 0;
 
         // Check packages
@@ -244,7 +244,8 @@ impl HealthChecker {
             .args(["is-active", "firewalld"])
             .output()
         {
-            let status = String::from_utf8_lossy(&output.stdout).trim();
+            let status = String::from_utf8_lossy(&output.stdout);
+            let status = status.trim();
             if status == "active" {
                 details.push("Firewall is active".to_string());
             } else {
@@ -282,7 +283,8 @@ impl HealthChecker {
                 .args(["is-active", service])
                 .output()
             {
-                let status = String::from_utf8_lossy(&output.stdout).trim();
+                let status = String::from_utf8_lossy(&output.stdout);
+                let status = status.trim();
                 if status == "active" || status == "inactive" {
                     details.push(format!("{}: {}", service, status));
                 } else {
@@ -464,7 +466,7 @@ impl HealthChecker {
             &report.overall_score.to_string().red()
         };
 
-        println!("Overall Score: {}\n", score_color.bold());
+        println!("Overall Score: {}\n", score_color.clone().bold());
 
         for category in &report.categories {
             let icon = match category.status {

@@ -4,9 +4,8 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Conversation message
@@ -67,7 +66,7 @@ impl AiMemory {
         // Create cache directory if it doesn't exist
         fs::create_dir_all(&cache_dir).context("Failed to create cache directory")?;
 
-        let memory = AiMemory {
+        let mut memory = AiMemory {
             cache_dir,
             current_session: ConversationSession {
                 id: Self::generate_session_id(),
@@ -103,6 +102,7 @@ impl AiMemory {
     }
 
     /// Get the history file path
+    #[allow(dead_code)]
     fn history_path(&self) -> PathBuf {
         self.cache_dir.join("ai_history.json")
     }

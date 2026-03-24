@@ -203,7 +203,7 @@ impl HardwareDetector {
                     // Extract model name
                     let model = line
                         .split(':')
-                        .last()
+                        .next_back()
                         .unwrap_or("Unknown GPU")
                         .trim()
                         .to_string();
@@ -218,14 +218,12 @@ impl HardwareDetector {
         }
 
         // Fallback: check for NVIDIA in /sys
-        if gpus.is_empty() {
-            if Path::new("/sys/bus/pci/drivers/nvidia").exists() {
-                gpus.push(GpuInfo {
-                    vendor: GpuVendor::NVIDIA,
-                    model: "NVIDIA GPU".to_string(),
-                    vram: None,
-                });
-            }
+        if gpus.is_empty() && Path::new("/sys/bus/pci/drivers/nvidia").exists() {
+            gpus.push(GpuInfo {
+                vendor: GpuVendor::NVIDIA,
+                model: "NVIDIA GPU".to_string(),
+                vram: None,
+            });
         }
 
         Ok(gpus)
@@ -300,7 +298,7 @@ impl HardwareDetector {
                     Path::new(&format!("/sys/class/net/{}/wireless", interface)).exists();
 
                 // Try to get driver
-                let driver = fs::read_link(&format!("/sys/class/net/{}/device/driver", interface))
+                let driver = fs::read_link(format!("/sys/class/net/{}/device/driver", interface))
                     .ok()
                     .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()));
 

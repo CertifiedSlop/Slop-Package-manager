@@ -3,7 +3,6 @@
 //! Semantic package search beyond keyword matching.
 
 use crate::package_resolver::{PackageInfo, PackageResolver, SearchResult};
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -40,6 +39,7 @@ pub struct PackageCategory {
 pub struct SemanticSearchEngine {
     resolver: PackageResolver,
     categories: Vec<PackageCategory>,
+    #[allow(dead_code)]
     package_descriptions: HashMap<String, String>,
     keyword_index: HashMap<String, Vec<String>>,
 }
@@ -312,7 +312,7 @@ impl SemanticSearchEngine {
         for (keyword, category) in keyword_mappings {
             self.keyword_index
                 .entry(keyword.to_string())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(category.to_string());
         }
     }

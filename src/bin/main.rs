@@ -333,6 +333,18 @@ impl App {
             ActionType::Unknown => {
                 println!("{}", "Could not determine action.".yellow());
             }
+            ActionType::Rollback => {
+                println!(
+                    "{}",
+                    "Rollback action - use 'slop ai \"undo my last change\"'".yellow()
+                );
+            }
+            ActionType::Optimize => {
+                println!("{}", "Optimize action - use 'slop ai-optimize'".yellow());
+            }
+            ActionType::Suggest => {
+                println!("{}", "Suggest action - use 'slop ai-suggest'".yellow());
+            }
         }
 
         Ok(())
@@ -671,7 +683,7 @@ impl App {
         let mut wizard = SetupWizard::new();
         wizard.set_verbose(self.verbose);
 
-        let preferences = wizard.run()?;
+        let _preferences = wizard.run()?;
 
         println!("\n{} Setup wizard completed!", "✓".green());
         println!(
@@ -728,10 +740,10 @@ impl App {
             };
 
             println!(
-                "{} {} {}",
+                "{} {} {}#{}{}",
                 severity_icon,
                 conflict.title.bold(),
-                "(#".dimmed(),
+                "(".dimmed(),
                 conflict.id.dimmed(),
                 ")".dimmed()
             );

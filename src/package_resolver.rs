@@ -3,11 +3,11 @@
 //! Handles package name resolution, searching, and validation.
 
 use anyhow::{Context, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Package information from nixpkgs
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub struct PackageInfo {
     pub name: String,

@@ -87,7 +87,7 @@ impl ConfigOptimizer {
         let mut suggestions = Vec::new();
 
         // Common packages that are often installed but unused
-        let potentially_unused = [
+        let _potentially_unused = [
             "vim",
             "neovim",
             "emacs", // Multiple editors
@@ -105,9 +105,10 @@ impl ConfigOptimizer {
         let mut unused = Vec::new();
 
         // Check for multiple editors
-        let editors: Vec<_> = ["vim", "neovim", "emacs"]
+        let editors: Vec<String> = ["vim", "neovim", "emacs"]
             .iter()
-            .filter(|e| installed.iter().any(|p| p.contains(e)))
+            .filter(|e| installed.iter().any(|p| p.contains(*e)))
+            .map(|s| s.to_string())
             .collect();
 
         if editors.len() > 1 {
@@ -118,9 +119,10 @@ impl ConfigOptimizer {
         }
 
         // Check for multiple browsers
-        let browsers: Vec<_> = ["firefox", "chromium", "google-chrome", "brave"]
+        let browsers: Vec<String> = ["firefox", "chromium", "google-chrome", "brave"]
             .iter()
-            .filter(|b| installed.iter().any(|p| p.contains(b)))
+            .filter(|b| installed.iter().any(|p| p.contains(*b)))
+            .map(|s| s.to_string())
             .collect();
 
         if browsers.len() > 2 {
@@ -131,9 +133,10 @@ impl ConfigOptimizer {
         }
 
         // Check for multiple media players
-        let players: Vec<_> = ["vlc", "mpv", "celluloid"]
+        let players: Vec<String> = ["vlc", "mpv", "celluloid"]
             .iter()
-            .filter(|p| installed.iter().any(|pkg| pkg.contains(p)))
+            .filter(|p| installed.iter().any(|pkg| pkg.contains(*p)))
+            .map(|s| s.to_string())
             .collect();
 
         if players.len() > 1 {

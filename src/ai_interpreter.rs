@@ -212,7 +212,7 @@ impl AiInterpreter {
 
         for pattern in suggest_patterns {
             if let Some(caps) = Regex::new(pattern).ok()?.captures(request) {
-                let category = caps
+                let _category = caps
                     .get(1)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_else(|| "general".to_string());
@@ -254,11 +254,9 @@ impl AiInterpreter {
                     let packages = self.resolve_packages(package_query);
                     if !packages.is_empty() {
                         // Check if already installed
-                        let already_installed = packages.iter().any(|p| {
-                            self.context
-                                .as_ref()
-                                .map_or(false, |ctx| ctx.is_installed(p))
-                        });
+                        let already_installed = packages
+                            .iter()
+                            .any(|p| self.context.as_ref().is_some_and(|ctx| ctx.is_installed(p)));
 
                         let confidence = if already_installed {
                             0.6 // Lower confidence if already installed
@@ -579,7 +577,10 @@ If unsure, use "search" action."#,
             action,
             packages,
             confidence,
-            original_request: String::new(), // Will be set by caller
+            original_request: String::new(),
+            rollback_target: None,
+            optimize_flags: Vec::new(),
+            suggestions: Vec::new(),
         })
     }
 }

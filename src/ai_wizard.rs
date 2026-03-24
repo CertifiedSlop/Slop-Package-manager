@@ -121,7 +121,7 @@ impl SetupWizard {
             "What will you use this system for?".to_string().bold()
         );
 
-        let options = vec![
+        let options = [
             ("Desktop daily driver", SystemType::Desktop),
             ("Development machine", SystemType::Development),
             ("Server / Headless", SystemType::Server),
@@ -156,7 +156,7 @@ impl SetupWizard {
                 .bold()
         );
 
-        let options = vec![
+        let options = [
             ("GNOME - Polished, user-friendly", DesktopEnvironment::GNOME),
             ("KDE Plasma - Highly customizable", DesktopEnvironment::KDE),
             ("XFCE - Lightweight, traditional", DesktopEnvironment::XFCE),
@@ -504,7 +504,8 @@ impl SetupWizard {
             }
             2 => {
                 println!("\n{} Starting over...", "🔄".yellow());
-                return self.run();
+                self.run()?;
+                return Ok(());
             }
             _ => {
                 println!("\n{} Setup cancelled.", "ℹ".blue());

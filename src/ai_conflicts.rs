@@ -5,7 +5,7 @@
 use crate::nix_config::NixConfig;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::Path;
 
 /// Conflict severity level
@@ -242,7 +242,7 @@ impl ConflictDetector {
             let matching_packages: Vec<String> = rule
                 .packages
                 .iter()
-                .filter(|p| all_packages.iter().any(|ap| ap.contains(p)))
+                .filter(|p| all_packages.iter().any(|ap| ap.contains(*p)))
                 .cloned()
                 .collect();
 
