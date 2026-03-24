@@ -33,6 +33,8 @@ And slop will automatically:
 
 ## ✨ Features
 
+### Core Features
+
 | Feature | Description |
 |---------|-------------|
 | 🚀 **Quick Install** | `slop install <package>` - done! |
@@ -41,6 +43,32 @@ And slop will automatically:
 | 📦 **Smart Resolution** | 50+ built-in aliases (nvim→neovim, browser→firefox) |
 | 🎨 **Beautiful UX** | Colored output, diffs, interactive prompts |
 | 🔍 **Search** | Find packages with `slop search <query>` |
+
+### 🆕 Advanced AI Features
+
+| Feature | Command | Description |
+|---------|---------|-------------|
+| **🧙 Setup Wizard** | `slop ai-setup` | Interactive guided setup for new users |
+| **🔍 Semantic Search** | `slop search --semantic` | Search by use case, not just keywords |
+| **🏥 Health Check** | `slop ai-health` | System health analysis & maintenance tips |
+| **🔧 Hardware Detect** | `slop ai-detect-hardware` | Detect hardware & get driver recommendations |
+| **⚠️ Conflict Check** | `slop ai-check-conflicts` | Detect package conflicts before installation |
+| **💬 AI Chat** | `slop ai-chat` | Interactive conversational interface |
+| **💡 Suggestions** | `slop ai-suggest` | Get personalized package recommendations |
+| **⚡ Optimize** | `slop ai-optimize` | Find configuration optimizations |
+| **📜 History** | `slop ai-history` | View conversation history |
+| **🧹 Clear History** | `slop ai-clear-history` | Clear AI conversation history |
+
+### AI Capabilities
+
+- **🧠 Context-Aware** - Remembers your configuration and previous conversations
+- **🎯 Smart Recommendations** - Suggests packages based on your setup
+- **↩️ Natural Rollback** - `"undo my last change"`
+- **📦 Package Bundles** - Pre-configured sets for common use cases (dev-rust, dev-python, etc.)
+- **🔌 Hardware Support** - Auto-detect GPU, network, audio and suggest drivers
+- **🏥 Health Monitoring** - Disk usage, security, configuration checks
+- **⚠️ Conflict Detection** - Warns about incompatible packages
+- **💬 Conversational** - Multi-turn conversations with context
 
 ## 📦 Installation
 
@@ -123,7 +151,16 @@ slop ai "i need a terminal editor"
 slop ai "remove the web browser"
 slop ai "set me up for rust development"
 
-# AI will interpret and execute the appropriate actions
+# Advanced AI commands
+slop ai-setup                    # Interactive setup wizard
+slop ai-chat                     # Conversational interface
+slop ai-suggest rust             # Get package suggestions
+slop ai-optimize                 # Find config optimizations
+slop ai-health                   # System health check
+slop ai-detect-hardware          # Hardware detection
+slop ai-check-conflicts firefox  # Check for conflicts
+slop search --semantic "video editing"  # Semantic search
+slop ai-history                  # View conversation history
 ```
 
 ### Global Options
@@ -269,29 +306,48 @@ export OPENROUTER_API_KEY="sk-or-..."
 ## 🏗️ Architecture
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                      CLI (clap)                            │
-│   install │ remove │ search │ ai │ list │ diff             │
-└────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌────────────────────────────────────────────────────────────┐
-│                    Application Core                        │
-├───────────────┬───────────────┬───────────────┬────────────┤
-│  NixConfig    │  Package      │  AI           │  Rebuild   │
-│  Parser       │  Resolver     │  Interpreter  │  Executor  │
-│               │               │               │            │
-│  • Parse      │  • Resolve    │  • Pattern    │  • Backup  │
-│  • Edit       │  • Search     │  • LLM API    │  • Validate│
-│  • Validate   │  • Suggest    │  • Actions    │  • Rebuild │
-└───────────────┴───────────────┴───────────────┴────────────┘
-                            │
-                            ▼
-┌────────────────────────────────────────────────────────────┐
-│                   NixOS System                             │
-│         /etc/nixos/configuration.nix + nixos-rebuild       │
-└────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                           CLI (clap)                                   │
+│  install │ remove │ search │ ai │ ai-setup │ ai-health │ ai-suggest   │
+└───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                        Application Core                                │
+├────────────┬────────────┬────────────┬────────────┬───────────────────┤
+│ NixConfig  │ Package    │ AI Suite   │ Rebuild    │ Health            │
+│ Parser     │ Resolver   │            │ Executor   │ Checker           │
+│            │            │            │            │                   │
+│ • Parse    │ • Resolve  │ • Context  │ • Backup   │ • Disk check      │
+│ • Edit     │ • Search   │ • Memory   │ • Validate │ • Security scan   │
+│ • Validate │ • Suggest  │ • Wizard   │ • Rebuild  │ • Service check   │
+│            │            │ • Optimize │            │ • Config check    │
+│            │            │ • Hardware │            │                   │
+│            │            │ • Conflicts│            │                   │
+│            │            │ • Search   │            │                   │
+│            │            │ • Bundles  │            │                   │
+└────────────┴────────────┴────────────┴────────────┴───────────────────┘
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                         NixOS System                                   │
+│              /etc/nixos/configuration.nix + nixos-rebuild              │
+└───────────────────────────────────────────────────────────────────────┘
 ```
+
+### AI Modules
+
+| Module | Purpose |
+|--------|---------|
+| `ai_context` | System configuration awareness |
+| `ai_memory` | Conversation history & preferences |
+| `ai_wizard` | Interactive setup guidance |
+| `ai_optimizer` | Configuration optimization |
+| `ai_hardware` | Hardware detection & drivers |
+| `ai_conflicts` | Package conflict detection |
+| `ai_search` | Semantic package search |
+| `ai_bundles` | Pre-configured package sets |
+| `ai_health` | System health monitoring |
 
 ## 🧪 Development
 

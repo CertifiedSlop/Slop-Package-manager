@@ -48,6 +48,10 @@ pub enum Commands {
     Search {
         /// Search query
         query: String,
+
+        /// Use semantic search
+        #[arg(short, long)]
+        semantic: bool,
     },
 
     /// Process a natural language request
@@ -55,6 +59,47 @@ pub enum Commands {
         /// Natural language description of what you want
         request: String,
     },
+
+    /// Get AI-powered package suggestions
+    AiSuggest {
+        /// Category or use case (e.g., "rust", "web-dev", "gaming")
+        category: Option<String>,
+    },
+
+    /// Optimize your configuration with AI
+    AiOptimize {
+        /// Show only suggestions without making changes
+        #[arg(short, long)]
+        dry_run: bool,
+    },
+
+    /// Interactive AI chat mode
+    AiChat,
+
+    /// Run the interactive setup wizard
+    AiSetup,
+
+    /// Detect hardware and get recommendations
+    AiDetectHardware,
+
+    /// Check for package conflicts
+    AiCheckConflicts {
+        /// Packages to check
+        packages: Vec<String>,
+    },
+
+    /// Run AI system health check
+    AiHealth,
+
+    /// Show conversation history
+    AiHistory {
+        /// Number of entries to show
+        #[arg(short, long, default_value = "10")]
+        limit: usize,
+    },
+
+    /// Clear AI conversation history
+    AiClearHistory,
 
     /// Show current installed packages
     List,

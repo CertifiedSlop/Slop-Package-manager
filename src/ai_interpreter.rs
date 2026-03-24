@@ -3,6 +3,7 @@
 //! Converts natural language requests into package actions.
 //! Supports multiple LLM providers: OpenAI, Ollama, and OpenRouter.
 
+use crate::ai_context::AiContext;
 use crate::package_resolver::PackageResolver;
 use anyhow::{bail, Context, Result};
 use regex::Regex;
@@ -14,6 +15,9 @@ pub enum ActionType {
     Install,
     Remove,
     Search,
+    Rollback,
+    Optimize,
+    Suggest,
     Unknown,
 }
 
@@ -24,6 +28,20 @@ pub struct AiAction {
     pub packages: Vec<String>,
     pub confidence: f32,
     pub original_request: String,
+    /// Optional rollback target (generation number or time expression)
+    pub rollback_target: Option<String>,
+    /// Optional optimization flags
+    pub optimize_flags: Vec<String>,
+    /// Context-aware suggestions
+    pub suggestions: Vec<AiSuggestion>,
+}
+
+/// AI suggestion for packages
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiSuggestion {
+    pub package: String,
+    pub reason: String,
+    pub category: String,
 }
 
 /// LLM Provider configuration
@@ -39,6 +57,7 @@ pub struct AiInterpreter {
     resolver: PackageResolver,
     provider: LlmProvider,
     api_key: Option<String>,
+    context: Option<AiContext>,
 }
 
 impl AiInterpreter {
@@ -54,16 +73,55 @@ impl AiInterpreter {
             LlmProvider::OpenAI
         };
 
+        // Try to load context, fall back to None if unavailable
+        let context = AiContext::new("/etc/nixos/configuration.nix").ok();
+
         AiInterpreter {
             resolver,
             provider,
             api_key,
+            context,
+        }
+    }
+
+    /// Create a new interpreter with a custom context
+    pub fn with_context(resolver: PackageResolver, context: AiContext) -> Self {
+        let api_key = std::env::var("SLOP_AI_API_KEY").ok();
+
+        let provider = if let Ok(url) = std::env::var("SLOP_OLLAMA_URL") {
+            LlmProvider::Ollama { url }
+        } else if std::env::var("SLOP_OPENROUTER_KEY").is_ok() {
+            LlmProvider::OpenRouter
+        } else {
+            LlmProvider::OpenAI
+        };
+
+        AiInterpreter {
+            resolver,
+            provider,
+            api_key,
+            context: Some(context),
         }
     }
 
     /// Parse a natural language request into an action
     pub fn interpret(&self, request: &str) -> Result<AiAction> {
         let request_lower = request.to_lowercase();
+
+        // Check for rollback requests first
+        if let Some(action) = self.parse_rollback(&request_lower) {
+            return Ok(action);
+        }
+
+        // Check for optimization requests
+        if let Some(action) = self.parse_optimize(&request_lower) {
+            return Ok(action);
+        }
+
+        // Check for suggestion requests
+        if let Some(action) = self.parse_suggest(&request_lower) {
+            return Ok(action);
+        }
 
         // Try pattern matching first (fast, offline)
         if let Some(action) = self.pattern_match(&request_lower) {
@@ -85,7 +143,85 @@ impl AiInterpreter {
             packages: vec![request.to_string()],
             confidence: 0.5,
             original_request: request.to_string(),
+            rollback_target: None,
+            optimize_flags: Vec::new(),
+            suggestions: Vec::new(),
         })
+    }
+
+    /// Parse rollback requests
+    fn parse_rollback(&self, request: &str) -> Option<AiAction> {
+        let rollback_patterns = [
+            r"(?:undo|revert|rollback|roll\s*back)\s*(?:my|the)?\s*(?:last|previous|recent)?\s*(?:change|update|modification)?",
+            r"(?:go\s+back\s+to)\s+(?:generation\s+)?(\d+)",
+            r"(?:undo)\s+(?:my\s+)?(?:last|previous)\s*(?:change|action)",
+            r"(?:revert)\s+(?:to\s+)?(?:yesterday|last\s+week|last\s+month)",
+        ];
+
+        for pattern in rollback_patterns {
+            if let Some(caps) = Regex::new(pattern).ok()?.captures(request) {
+                let target = caps.get(1).map(|m| m.as_str().to_string());
+                return Some(AiAction {
+                    action: ActionType::Rollback,
+                    packages: Vec::new(),
+                    confidence: 0.9,
+                    original_request: request.to_string(),
+                    rollback_target: target.or_else(|| Some("last".to_string())),
+                    optimize_flags: Vec::new(),
+                    suggestions: Vec::new(),
+                });
+            }
+        }
+        None
+    }
+
+    /// Parse optimization requests
+    fn parse_optimize(&self, request: &str) -> Option<AiAction> {
+        let optimize_patterns = [
+            r"(?:optimize|improve|clean\s*up)\s*(?:my)?\s*(?:config|configuration|system)",
+            r"(?:make\s+my)?\s*(?:config|system)\s+(?:faster|smaller|better|cleaner)",
+            r"(?:remove\s+unused|clean\s+unused)\s*(?:packages)?",
+        ];
+
+        for pattern in optimize_patterns {
+            if Regex::new(pattern).ok()?.is_match(request) {
+                return Some(AiAction {
+                    action: ActionType::Optimize,
+                    packages: Vec::new(),
+                    confidence: 0.85,
+                    original_request: request.to_string(),
+                    rollback_target: None,
+                    optimize_flags: vec!["unused-packages".to_string(), "redundant-modules".to_string()],
+                    suggestions: Vec::new(),
+                });
+            }
+        }
+        None
+    }
+
+    /// Parse suggestion requests
+    fn parse_suggest(&self, request: &str) -> Option<AiAction> {
+        let suggest_patterns = [
+            r"(?:suggest|recommend)\s*(?:me)?\s*(?:some)?\s*(?:packages)?(?:for)?\s*(\w+)?",
+            r"(?:what\s+(?:should|can\s+I)\s+(?:install|add))\s*(?:for)?\s*(\w+)?",
+            r"(?:i\s+want\s+to)\s*(\w+)\s*(?:development|programming)?",
+        ];
+
+        for pattern in suggest_patterns {
+            if let Some(caps) = Regex::new(pattern).ok()?.captures(request) {
+                let category = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "general".to_string());
+                return Some(AiAction {
+                    action: ActionType::Suggest,
+                    packages: Vec::new(),
+                    confidence: 0.8,
+                    original_request: request.to_string(),
+                    rollback_target: None,
+                    optimize_flags: Vec::new(),
+                    suggestions: Vec::new(), // Will be populated by handler
+                });
+            }
+        }
+        None
     }
 
     /// Pattern-based interpretation (offline, fast)
@@ -111,11 +247,25 @@ impl AiInterpreter {
                     let package_query = matched.as_str().trim();
                     let packages = self.resolve_packages(package_query);
                     if !packages.is_empty() {
+                        // Check if already installed
+                        let already_installed = packages.iter().any(|p| {
+                            self.context.as_ref().map_or(false, |ctx| ctx.is_installed(p))
+                        });
+
+                        let confidence = if already_installed {
+                            0.6 // Lower confidence if already installed
+                        } else {
+                            0.8
+                        };
+
                         return Some(AiAction {
                             action: ActionType::Install,
                             packages,
-                            confidence: 0.8,
+                            confidence,
                             original_request: request.to_string(),
+                            rollback_target: None,
+                            optimize_flags: Vec::new(),
+                            suggestions: Vec::new(),
                         });
                     }
                 }
@@ -134,6 +284,9 @@ impl AiInterpreter {
                             packages,
                             confidence: 0.8,
                             original_request: request.to_string(),
+                            rollback_target: None,
+                            optimize_flags: Vec::new(),
+                            suggestions: Vec::new(),
                         });
                     }
                 }
@@ -160,6 +313,9 @@ impl AiInterpreter {
                     packages: vec![package.to_string()],
                     confidence: 0.7,
                     original_request: request.to_string(),
+                    rollback_target: None,
+                    optimize_flags: Vec::new(),
+                    suggestions: Vec::new(),
                 });
             }
         }

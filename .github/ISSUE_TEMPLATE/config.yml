@@ -1,0 +1,34 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/CertifiedSlop/Slop-Package-manager/discussions
+    about: Please ask and answer questions here.
+  - name: Security Issues
+    url: https://github.com/CertifiedSlop/Slop-Package-manager/blob/main/SECURITY.md
+    about: Please report security vulnerabilities via email, not through GitHub issues.
+
+templates:
+  - name: Bug Report
+    description: Report a bug or unexpected behavior
+    filename: bug_report.md
+    labels: [bug]
+
+  - name: Feature Request
+    description: Suggest a new feature or improvement
+    filename: feature_request.md
+    labels: [enhancement]
+
+  - name: Package Alias Request
+    description: Request a new package alias
+    filename: package_alias_request.md
+    labels: [enhancement, aliases]
+
+  - name: Roadmap Feature Vote
+    description: Vote or comment on planned roadmap features
+    filename: roadmap_vote.md
+    labels: [roadmap]
+
+  - name: Documentation Improvement
+    description: Suggest improvements to documentation
+    filename: documentation_improvement.md
+    labels: [documentation]
