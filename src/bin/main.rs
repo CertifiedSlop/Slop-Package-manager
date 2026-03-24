@@ -386,7 +386,10 @@ impl App {
                     println!("   {}", bundle.description);
                     println!("   Packages: {}", bundle.packages.join(", ").green());
                     if !bundle.optional_packages.is_empty() {
-                        println!("   Optional: {}", bundle.optional_packages.join(", ").yellow());
+                        println!(
+                            "   Optional: {}",
+                            bundle.optional_packages.join(", ").yellow()
+                        );
                     }
                     println!();
                 }
@@ -400,10 +403,21 @@ impl App {
             }
 
             println!("\n{} Popular bundles:\n", "⭐".green());
-            let popular = ["dev-rust", "dev-python", "dev-web", "utils-cli", "desktop-essentials"];
+            let popular = [
+                "dev-rust",
+                "dev-python",
+                "dev-web",
+                "utils-cli",
+                "desktop-essentials",
+            ];
             for id in &popular {
                 if let Some(bundle) = bundle_manager.get_bundle(id) {
-                    println!("  {} {} - {}", "⭐".yellow(), bundle.name.bold(), bundle.description.dimmed());
+                    println!(
+                        "  {} {} - {}",
+                        "⭐".yellow(),
+                        bundle.name.bold(),
+                        bundle.description.dimmed()
+                    );
                 }
             }
 
@@ -416,7 +430,10 @@ impl App {
 
     /// Optimize configuration with AI
     fn ai_optimize(&self, dry_run: bool) -> Result<()> {
-        println!("{} Analyzing configuration for optimizations...", "🤖".blue());
+        println!(
+            "{} Analyzing configuration for optimizations...",
+            "🤖".blue()
+        );
 
         let optimizer = match ConfigOptimizer::new("/etc/nixos/configuration.nix") {
             Ok(opt) => opt,
@@ -443,7 +460,12 @@ impl App {
                 slop::ai_optimizer::ImpactLevel::Low => "🟢",
             };
 
-            println!("{}. {} {}", (i + 1).to_string().cyan().bold(), impact_icon, suggestion.title.bold());
+            println!(
+                "{}. {} {}",
+                (i + 1).to_string().cyan().bold(),
+                impact_icon,
+                suggestion.title.bold()
+            );
             println!("   {}", suggestion.description);
 
             if let Some(savings) = &suggestion.estimated_savings {
@@ -453,7 +475,10 @@ impl App {
         }
 
         if !dry_run {
-            println!("{} To apply optimizations, review each suggestion manually.", "ℹ".blue());
+            println!(
+                "{} To apply optimizations, review each suggestion manually.",
+                "ℹ".blue()
+            );
             println!("   Some optimizations may require manual intervention.");
         } else {
             println!("{} Dry run mode - no changes made.", "ℹ".blue());
@@ -466,8 +491,14 @@ impl App {
     async fn ai_chat(&mut self) -> Result<()> {
         use std::io::{self, BufRead, Write};
 
-        println!("{} Entering AI chat mode. Type 'quit' to exit.", "🤖".blue());
-        println!("{} Ask me to install packages, suggest tools, or optimize your config.", "💡".green());
+        println!(
+            "{} Entering AI chat mode. Type 'quit' to exit.",
+            "🤖".blue()
+        );
+        println!(
+            "{} Ask me to install packages, suggest tools, or optimize your config.",
+            "💡".green()
+        );
         println!();
 
         let stdin = io::stdin();
@@ -529,7 +560,11 @@ impl App {
     async fn handle_chat_action(&mut self, action: AiAction) -> Result<()> {
         match action.action {
             ActionType::Install => {
-                println!("{} Installing: {}", "📦".green(), action.packages.join(", "));
+                println!(
+                    "{} Installing: {}",
+                    "📦".green(),
+                    action.packages.join(", ")
+                );
                 for package in &action.packages {
                     if let Err(e) = self.install(package).await {
                         println!("{} Failed to install {}: {}", "⚠".yellow(), package, e);
@@ -545,7 +580,11 @@ impl App {
                 }
             }
             ActionType::Search => {
-                println!("{} Searching for: {}", "🔍".green(), action.packages.join(", "));
+                println!(
+                    "{} Searching for: {}",
+                    "🔍".green(),
+                    action.packages.join(", ")
+                );
                 for package in &action.packages {
                     if let Err(e) = self.search(package) {
                         println!("{} Search failed: {}", "⚠".yellow(), e);
@@ -553,7 +592,11 @@ impl App {
                 }
             }
             ActionType::Rollback => {
-                println!("{} Rollback requested: {:?}", "↩️".yellow(), action.rollback_target);
+                println!(
+                    "{} Rollback requested: {:?}",
+                    "↩️".yellow(),
+                    action.rollback_target
+                );
                 println!("   Use 'nixos-rebuild switch --rollback' for system rollback.");
             }
             ActionType::Optimize => {
@@ -631,7 +674,10 @@ impl App {
         let preferences = wizard.run()?;
 
         println!("\n{} Setup wizard completed!", "✓".green());
-        println!("{} Review your preferences above and run the suggested commands.", "💡".yellow());
+        println!(
+            "{} Review your preferences above and run the suggested commands.",
+            "💡".yellow()
+        );
 
         Ok(())
     }
@@ -681,7 +727,14 @@ impl App {
                 slop::ai_conflicts::ConflictSeverity::Info => "ℹ️",
             };
 
-            println!("{} {} {}", severity_icon, conflict.title.bold(), "(#".dimmed(), conflict.id.dimmed(), ")".dimmed());
+            println!(
+                "{} {} {}",
+                severity_icon,
+                conflict.title.bold(),
+                "(#".dimmed(),
+                conflict.id.dimmed(),
+                ")".dimmed()
+            );
             println!("   {}", conflict.description);
             println!("   {} {}", "💡".yellow(), conflict.suggestion);
             println!();
@@ -690,7 +743,10 @@ impl App {
         if report.is_safe() {
             println!("{} Installation can proceed safely.", "✓".green());
         } else {
-            println!("{} Please resolve critical issues before proceeding.", "⚠".yellow());
+            println!(
+                "{} Please resolve critical issues before proceeding.",
+                "⚠".yellow()
+            );
         }
 
         Ok(())

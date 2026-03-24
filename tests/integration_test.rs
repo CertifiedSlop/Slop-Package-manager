@@ -2,7 +2,7 @@
 //!
 //! End-to-end tests that verify the full workflow of package management operations.
 
-use slop::ai_interpreter::{AiInterpreter, ActionType};
+use slop::ai_interpreter::{ActionType, AiInterpreter};
 use slop::flake_manager::{Flake, FlakeInput};
 use slop::nix_config::NixConfig;
 use slop::package_resolver::PackageResolver;
@@ -56,7 +56,9 @@ fn test_config_load_and_modify() {
     assert!(config.has_package("vscode"));
 
     // Remove a package
-    let removed = config.remove_package("git").expect("Failed to remove package");
+    let removed = config
+        .remove_package("git")
+        .expect("Failed to remove package");
     assert!(removed);
     assert!(!config.has_package("git"));
 
@@ -147,7 +149,9 @@ fn test_package_suggestions() {
     assert!(suggestions.contains(&"firefox".to_string()));
 
     let suggestions = resolver.suggest("neo");
-    assert!(suggestions.iter().any(|s| s.contains("neovim") || s.contains("nvim")));
+    assert!(suggestions
+        .iter()
+        .any(|s| s.contains("neovim") || s.contains("nvim")));
 }
 
 // ============================================================================
@@ -185,7 +189,10 @@ fn test_ai_remove_interpretation() {
 
     let action = interpreter.interpret("uninstall neovim").unwrap();
     assert_eq!(action.action, ActionType::Remove);
-    assert!(action.packages.iter().any(|p| p.contains("neovim") || p.contains("nvim")));
+    assert!(action
+        .packages
+        .iter()
+        .any(|p| p.contains("neovim") || p.contains("nvim")));
 }
 
 #[test]
@@ -198,7 +205,9 @@ fn test_ai_confidence_levels() {
     assert!(action.confidence >= 0.7);
 
     // Natural language should still have good confidence
-    let action = interpreter.interpret("i would like to install a browser").unwrap();
+    let action = interpreter
+        .interpret("i would like to install a browser")
+        .unwrap();
     assert!(action.confidence >= 0.7);
 }
 
@@ -245,7 +254,9 @@ fn test_flake_load_and_modify() {
     assert_eq!(flake.inputs.len(), 3);
 
     // Remove input
-    let removed = flake.remove_input("flake-utils").expect("Failed to remove input");
+    let removed = flake
+        .remove_input("flake-utils")
+        .expect("Failed to remove input");
     assert!(removed);
     assert!(!flake.has_input("flake-utils"));
     assert_eq!(flake.inputs.len(), 2);
@@ -289,7 +300,9 @@ fn test_flake_input_update() {
     flake.save().expect("Failed to save flake");
 
     let reloaded = Flake::load(&flake_path).expect("Failed to reload flake");
-    assert!(reloaded.content.contains("github:nixos/nixpkgs/nixos-23.11"));
+    assert!(reloaded
+        .content
+        .contains("github:nixos/nixpkgs/nixos-23.11"));
 }
 
 #[test]
@@ -434,10 +447,7 @@ fn test_full_ai_workflow() {
 
     // Verify changes
     let reloaded = NixConfig::load(&config_path).expect("Failed to reload config");
-    assert!(action
-        .packages
-        .iter()
-        .any(|p| reloaded.has_package(p)));
+    assert!(action.packages.iter().any(|p| reloaded.has_package(p)));
 }
 
 #[test]

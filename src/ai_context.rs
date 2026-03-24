@@ -127,10 +127,7 @@ impl AiContext {
 
         // Networking
         if packages.iter().any(|p| {
-            p.contains("curl")
-                || p.contains("wget")
-                || p.contains("httpie")
-                || p.contains("netcat")
+            p.contains("curl") || p.contains("wget") || p.contains("httpie") || p.contains("netcat")
         }) {
             categories.insert("networking".to_string());
         }
@@ -185,28 +182,45 @@ impl AiContext {
     fn detect_dev_languages(packages: &HashSet<String>) -> HashSet<String> {
         let mut languages = HashSet::new();
 
-        if packages.iter().any(|p| p.contains("rust") || p.contains("cargo")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("rust") || p.contains("cargo"))
+        {
             languages.insert("rust".to_string());
         }
-        if packages.iter().any(|p| p.contains("nodejs") || p.contains("npm") || p.contains("yarn"))
+        if packages
+            .iter()
+            .any(|p| p.contains("nodejs") || p.contains("npm") || p.contains("yarn"))
         {
             languages.insert("javascript".to_string());
             languages.insert("typescript".to_string());
         }
-        if packages.iter().any(|p| p.contains("python") || p.contains("pip")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("python") || p.contains("pip"))
+        {
             languages.insert("python".to_string());
         }
-        if packages.iter().any(|p| p.contains("go") || p.contains("golang")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("go") || p.contains("golang"))
+        {
             languages.insert("go".to_string());
         }
-        if packages.iter().any(|p| p.contains("gcc") || p.contains("g++")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("gcc") || p.contains("g++"))
+        {
             languages.insert("c".to_string());
             languages.insert("cpp".to_string());
         }
         if packages.iter().any(|p| p.contains("clang")) {
             languages.insert("rust".to_string());
         }
-        if packages.iter().any(|p| p.contains("jdk") || p.contains("openjdk")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("jdk") || p.contains("openjdk"))
+        {
             languages.insert("java".to_string());
         }
 
@@ -218,13 +232,19 @@ impl AiContext {
         if packages.iter().any(|p| p.contains("gnome")) {
             return Some("GNOME".to_string());
         }
-        if packages.iter().any(|p| p.contains("plasma") || p.contains("kde")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("plasma") || p.contains("kde"))
+        {
             return Some("KDE Plasma".to_string());
         }
         if packages.iter().any(|p| p.contains("xfce")) {
             return Some("XFCE".to_string());
         }
-        if packages.iter().any(|p| p.contains("i3") || p.contains("sway")) {
+        if packages
+            .iter()
+            .any(|p| p.contains("i3") || p.contains("sway"))
+        {
             return Some("Tiling WM".to_string());
         }
         None
@@ -260,9 +280,7 @@ impl AiContext {
                 .context
                 .installed_packages
                 .iter()
-                .filter(|p| {
-                    p.contains("vlc") || p.contains("mpv") || p.contains("spotify")
-                })
+                .filter(|p| p.contains("vlc") || p.contains("mpv") || p.contains("spotify"))
                 .cloned()
                 .collect(),
             "editors" => self
@@ -281,11 +299,7 @@ impl AiContext {
                 .context
                 .installed_packages
                 .iter()
-                .filter(|p| {
-                    p.contains("firefox")
-                        || p.contains("chrome")
-                        || p.contains("chromium")
-                })
+                .filter(|p| p.contains("firefox") || p.contains("chrome") || p.contains("chromium"))
                 .cloned()
                 .collect(),
             _ => Vec::new(),
@@ -316,7 +330,12 @@ impl AiContext {
         if !self.context.dev_languages.is_empty() {
             parts.push(format!(
                 "Development languages: {}",
-                self.context.dev_languages.iter().cloned().collect::<Vec<_>>().join(", ")
+                self.context
+                    .dev_languages
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ));
         }
 
@@ -359,14 +378,11 @@ impl AiContext {
                     ));
                 }
                 if !self.context.dev_languages.contains("rust") {
-                    suggestions.push((
-                        "rustup".to_string(),
-                        "Rust toolchain installer".to_string(),
-                    ));
+                    suggestions
+                        .push(("rustup".to_string(), "Rust toolchain installer".to_string()));
                 }
                 if !self.context.installed_packages.contains("git") {
-                    suggestions
-                        .push(("git".to_string(), "Version control system".to_string()));
+                    suggestions.push(("git".to_string(), "Version control system".to_string()));
                 }
             }
             "desktop" => {
@@ -520,8 +536,6 @@ mod tests {
         let suggestions = ctx.suggest_packages(&resolver, "development");
 
         // Should suggest rust-analyzer since we have rust but not rust-analyzer
-        assert!(suggestions
-            .iter()
-            .any(|(pkg, _)| pkg == "rust-analyzer"));
+        assert!(suggestions.iter().any(|(pkg, _)| pkg == "rust-analyzer"));
     }
 }

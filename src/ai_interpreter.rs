@@ -191,7 +191,10 @@ impl AiInterpreter {
                     confidence: 0.85,
                     original_request: request.to_string(),
                     rollback_target: None,
-                    optimize_flags: vec!["unused-packages".to_string(), "redundant-modules".to_string()],
+                    optimize_flags: vec![
+                        "unused-packages".to_string(),
+                        "redundant-modules".to_string(),
+                    ],
                     suggestions: Vec::new(),
                 });
             }
@@ -209,7 +212,10 @@ impl AiInterpreter {
 
         for pattern in suggest_patterns {
             if let Some(caps) = Regex::new(pattern).ok()?.captures(request) {
-                let category = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "general".to_string());
+                let category = caps
+                    .get(1)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_else(|| "general".to_string());
                 return Some(AiAction {
                     action: ActionType::Suggest,
                     packages: Vec::new(),
@@ -249,7 +255,9 @@ impl AiInterpreter {
                     if !packages.is_empty() {
                         // Check if already installed
                         let already_installed = packages.iter().any(|p| {
-                            self.context.as_ref().map_or(false, |ctx| ctx.is_installed(p))
+                            self.context
+                                .as_ref()
+                                .map_or(false, |ctx| ctx.is_installed(p))
                         });
 
                         let confidence = if already_installed {

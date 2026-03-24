@@ -65,8 +65,7 @@ impl AiMemory {
             .join("slop");
 
         // Create cache directory if it doesn't exist
-        fs::create_dir_all(&cache_dir)
-            .context("Failed to create cache directory")?;
+        fs::create_dir_all(&cache_dir).context("Failed to create cache directory")?;
 
         let memory = AiMemory {
             cache_dir,
@@ -165,8 +164,7 @@ impl AiMemory {
         let content = serde_json::to_string_pretty(&self.current_session)
             .context("Failed to serialize session")?;
 
-        fs::write(self.session_path(), content)
-            .context("Failed to save session")?;
+        fs::write(self.session_path(), content).context("Failed to save session")?;
 
         Ok(())
     }
@@ -176,8 +174,8 @@ impl AiMemory {
         let session_path = self.session_path();
 
         if session_path.exists() {
-            let content = fs::read_to_string(&session_path)
-                .context("Failed to read session file")?;
+            let content =
+                fs::read_to_string(&session_path).context("Failed to read session file")?;
 
             if let Ok(session) = serde_json::from_str(&content) {
                 self.current_session = session;
@@ -192,8 +190,7 @@ impl AiMemory {
         let content = serde_json::to_string_pretty(&self.preferences)
             .context("Failed to serialize preferences")?;
 
-        fs::write(self.preferences_path(), content)
-            .context("Failed to save preferences")?;
+        fs::write(self.preferences_path(), content).context("Failed to save preferences")?;
 
         Ok(())
     }
@@ -203,8 +200,8 @@ impl AiMemory {
         let prefs_path = self.preferences_path();
 
         if prefs_path.exists() {
-            let content = fs::read_to_string(&prefs_path)
-                .context("Failed to read preferences file")?;
+            let content =
+                fs::read_to_string(&prefs_path).context("Failed to read preferences file")?;
 
             if let Ok(prefs) = serde_json::from_str(&content) {
                 self.preferences = prefs;
@@ -303,7 +300,11 @@ impl AiMemory {
     fn find_recent_package_by_category(&self, category: &str) -> Option<String> {
         let category_packages: Vec<(&str, &str)> = match category {
             "browser" => vec![("firefox", "browser"), ("chromium", "browser")],
-            "editor" => vec![("neovim", "editor"), ("vim", "editor"), ("vscode", "editor")],
+            "editor" => vec![
+                ("neovim", "editor"),
+                ("vim", "editor"),
+                ("vscode", "editor"),
+            ],
             "terminal" => vec![("alacritty", "terminal"), ("kitty", "terminal")],
             "shell" => vec![("zsh", "shell"), ("fish", "shell"), ("bash", "shell")],
             _ => return None,
@@ -333,14 +334,21 @@ impl AiMemory {
 
     /// Record package avoidance
     pub fn record_avoidance(&mut self, package: &str) {
-        if !self.preferences.avoided_packages.contains(&package.to_string()) {
+        if !self
+            .preferences
+            .avoided_packages
+            .contains(&package.to_string())
+        {
             self.preferences.avoided_packages.push(package.to_string());
         }
     }
 
     /// Check if a package should be avoided
     pub fn should_avoid(&self, package: &str) -> bool {
-        self.preferences.avoided_packages.iter().any(|p| p == package)
+        self.preferences
+            .avoided_packages
+            .iter()
+            .any(|p| p == package)
     }
 
     /// Get user preferences
@@ -390,8 +398,7 @@ impl AiMemory {
 
     /// Export conversation history
     pub fn export_history(&self) -> Result<String> {
-        serde_json::to_string_pretty(&self.current_session)
-            .context("Failed to export history")
+        serde_json::to_string_pretty(&self.current_session).context("Failed to export history")
     }
 }
 
@@ -429,7 +436,11 @@ mod tests {
         let mut memory = AiMemory::default();
 
         memory.add_user_message("install firefox");
-        memory.add_assistant_message("Installing firefox", Some("install"), vec!["firefox".to_string()]);
+        memory.add_assistant_message(
+            "Installing firefox",
+            Some("install"),
+            vec!["firefox".to_string()],
+        );
 
         assert_eq!(memory.current_session.messages.len(), 2);
     }
@@ -439,9 +450,17 @@ mod tests {
         let mut memory = AiMemory::default();
 
         memory.add_user_message("install firefox");
-        memory.add_assistant_message("Installing firefox", Some("install"), vec!["firefox".to_string()]);
+        memory.add_assistant_message(
+            "Installing firefox",
+            Some("install"),
+            vec!["firefox".to_string()],
+        );
         memory.add_user_message("also install neovim");
-        memory.add_assistant_message("Installing neovim", Some("install"), vec!["neovim".to_string()]);
+        memory.add_assistant_message(
+            "Installing neovim",
+            Some("install"),
+            vec!["neovim".to_string()],
+        );
 
         let packages = memory.get_recent_packages(5);
         assert!(packages.contains(&"firefox".to_string()));
@@ -453,7 +472,11 @@ mod tests {
         let mut memory = AiMemory::default();
 
         memory.add_user_message("install firefox");
-        memory.add_assistant_message("Installing firefox", Some("install"), vec!["firefox".to_string()]);
+        memory.add_assistant_message(
+            "Installing firefox",
+            Some("install"),
+            vec!["firefox".to_string()],
+        );
 
         let resolved = memory.resolve_reference("the browser");
         assert_eq!(resolved, Some("firefox".to_string()));

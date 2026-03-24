@@ -122,8 +122,8 @@ impl HardwareDetector {
 
     /// Detect CPU information
     fn detect_cpu(&self) -> Result<CpuInfo> {
-        let cpuinfo = fs::read_to_string("/proc/cpuinfo")
-            .context("Failed to read /proc/cpuinfo")?;
+        let cpuinfo =
+            fs::read_to_string("/proc/cpuinfo").context("Failed to read /proc/cpuinfo")?;
 
         let mut vendor = String::from("Unknown");
         let mut model = String::from("Unknown");
@@ -180,16 +180,16 @@ impl HardwareDetector {
         let mut gpus = Vec::new();
 
         // Try lspci for GPU detection
-        if let Ok(output) = std::process::Command::new("lspci")
-            .args(["-vnn"])
-            .output()
-        {
+        if let Ok(output) = std::process::Command::new("lspci").args(["-vnn"]).output() {
             let output_str = String::from_utf8_lossy(&output.stdout);
 
             for line in output_str.lines() {
                 let line_lower = line.to_lowercase();
 
-                if line_lower.contains("vga") || line_lower.contains("3d") || line_lower.contains("display") {
+                if line_lower.contains("vga")
+                    || line_lower.contains("3d")
+                    || line_lower.contains("display")
+                {
                     let vendor = if line.contains("NVIDIA") {
                         GpuVendor::NVIDIA
                     } else if line.contains("AMD") || line.contains("ATI") {
@@ -233,8 +233,8 @@ impl HardwareDetector {
 
     /// Detect RAM information
     fn detect_ram(&self) -> Result<RamInfo> {
-        let meminfo = fs::read_to_string("/proc/meminfo")
-            .context("Failed to read /proc/meminfo")?;
+        let meminfo =
+            fs::read_to_string("/proc/meminfo").context("Failed to read /proc/meminfo")?;
 
         let mut total_kb = 0;
 
@@ -296,7 +296,8 @@ impl HardwareDetector {
                 }
 
                 // Check if wireless
-                let wireless = Path::new(&format!("/sys/class/net/{}/wireless", interface)).exists();
+                let wireless =
+                    Path::new(&format!("/sys/class/net/{}/wireless", interface)).exists();
 
                 // Try to get driver
                 let driver = fs::read_link(&format!("/sys/class/net/{}/device/driver", interface))
@@ -319,10 +320,7 @@ impl HardwareDetector {
         let mut audio = Vec::new();
 
         // Try aplay -l for audio devices
-        if let Ok(output) = std::process::Command::new("aplay")
-            .arg("-l")
-            .output()
-        {
+        if let Ok(output) = std::process::Command::new("aplay").arg("-l").output() {
             let output_str = String::from_utf8_lossy(&output.stdout);
 
             for line in output_str.lines() {
@@ -494,16 +492,20 @@ impl HardwareDetector {
             recommendations.push(HardwareRecommendation {
                 category: "CPU".to_string(),
                 title: "Intel CPU Microcode".to_string(),
-                description: "Install Intel CPU microcode updates for security and stability.".to_string(),
+                description: "Install Intel CPU microcode updates for security and stability."
+                    .to_string(),
                 packages: vec!["intel-microcode".to_string()],
                 config_snippet: Some("  hardware.cpu.intel.updateMicrocode = true;".to_string()),
                 priority: Priority::High,
             });
-        } else if hardware.cpu.vendor.contains("AuthenticAMD") || hardware.cpu.vendor.contains("AMD") {
+        } else if hardware.cpu.vendor.contains("AuthenticAMD")
+            || hardware.cpu.vendor.contains("AMD")
+        {
             recommendations.push(HardwareRecommendation {
                 category: "CPU".to_string(),
                 title: "AMD CPU Microcode".to_string(),
-                description: "Install AMD CPU microcode updates for security and stability.".to_string(),
+                description: "Install AMD CPU microcode updates for security and stability."
+                    .to_string(),
                 packages: vec!["linux-firmware".to_string()],
                 config_snippet: Some("  hardware.cpu.amd.updateMicrocode = true;".to_string()),
                 priority: Priority::High,
@@ -527,7 +529,10 @@ impl HardwareDetector {
     /// Print hardware information
     pub fn print_hardware_info(&self) {
         let Some(hardware) = &self.hardware else {
-            println!("{} Hardware not detected yet. Run detect() first.", "⚠".yellow());
+            println!(
+                "{} Hardware not detected yet. Run detect() first.",
+                "⚠".yellow()
+            );
             return;
         };
 
@@ -536,8 +541,16 @@ impl HardwareDetector {
         println!("{}\n", "═══════════════════════════════════════".dimmed());
 
         // CPU
-        println!("{} CPU: {} {}", "📦".blue(), hardware.cpu.vendor, hardware.cpu.model);
-        println!("   Cores: {}, Threads: {}", hardware.cpu.cores, hardware.cpu.threads);
+        println!(
+            "{} CPU: {} {}",
+            "📦".blue(),
+            hardware.cpu.vendor,
+            hardware.cpu.model
+        );
+        println!(
+            "   Cores: {}, Threads: {}",
+            hardware.cpu.cores, hardware.cpu.threads
+        );
 
         // GPU
         println!("\n{} GPU(s):", "🎮".blue());
@@ -563,7 +576,11 @@ impl HardwareDetector {
         // Network
         println!("\n{} Network:", "🌐".blue());
         for network in &hardware.network {
-            let wifi_str = if network.wireless { "(WiFi)" } else { "(Ethernet)" };
+            let wifi_str = if network.wireless {
+                "(WiFi)"
+            } else {
+                "(Ethernet)"
+            };
             println!("   • {} {}", network.interface, wifi_str);
         }
 
@@ -597,7 +614,12 @@ impl HardwareDetector {
                 Priority::Optional => "⚪",
             };
 
-            println!("{}. {} {}", (i + 1).to_string().cyan().bold(), priority_icon, rec.title.bold());
+            println!(
+                "{}. {} {}",
+                (i + 1).to_string().cyan().bold(),
+                priority_icon,
+                rec.title.bold()
+            );
             println!("   {}", rec.description);
 
             if !rec.packages.is_empty() {

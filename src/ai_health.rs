@@ -170,10 +170,7 @@ impl HealthChecker {
         let mut score = 100;
 
         // Check root filesystem
-        if let Ok(output) = Command::new("df")
-            .args(["-h", "/"])
-            .output()
-        {
+        if let Ok(output) = Command::new("df").args(["-h", "/"]).output() {
             let output_str = String::from_utf8_lossy(&output.stdout);
             for line in output_str.lines().skip(1) {
                 let parts: Vec<&str> = line.split_whitespace().collect();
@@ -183,7 +180,8 @@ impl HealthChecker {
                         details.push(format!("Root filesystem: {}% used", usage));
 
                         if usage > 90 {
-                            details.push("Critical: Less than 10% disk space remaining!".to_string());
+                            details
+                                .push("Critical: Less than 10% disk space remaining!".to_string());
                             score -= 40;
                         } else if usage > 80 {
                             details.push("Warning: Less than 20% disk space remaining".to_string());
@@ -198,10 +196,7 @@ impl HealthChecker {
         }
 
         // Check /nix/store size
-        if let Ok(output) = Command::new("du")
-            .args(["-sh", "/nix/store"])
-            .output()
-        {
+        if let Ok(output) = Command::new("du").args(["-sh", "/nix/store"]).output() {
             let output_str = String::from_utf8_lossy(&output.stdout);
             let size = output_str.split_whitespace().next().unwrap_or("unknown");
             details.push(format!("/nix/store size: {}", size));
@@ -377,7 +372,10 @@ impl HealthChecker {
                 HealthStatus::Warning => "⚠️",
                 HealthStatus::Critical => "❌",
             };
-            summary.push_str(&format!("{} {}: {}/100\n", icon, category.name, category.score));
+            summary.push_str(&format!(
+                "{} {}: {}/100\n",
+                icon, category.name, category.score
+            ));
         }
 
         summary
@@ -390,11 +388,14 @@ impl HealthChecker {
         for category in &report.categories {
             match category.name.as_str() {
                 "Disk Usage" => {
-                    if category.status == HealthStatus::Warning || category.status == HealthStatus::Critical {
+                    if category.status == HealthStatus::Warning
+                        || category.status == HealthStatus::Critical
+                    {
                         recommendations.push(Recommendation {
                             category: "Disk Usage".to_string(),
                             title: "Clean up old generations".to_string(),
-                            description: "Remove old system generations to free up disk space.".to_string(),
+                            description: "Remove old system generations to free up disk space."
+                                .to_string(),
                             command: Some("nix-collect-garbage --delete-older-than 7d".to_string()),
                             priority: Priority::High,
                             estimated_impact: "Can free 1-10GB of disk space".to_string(),
@@ -402,7 +403,11 @@ impl HealthChecker {
                     }
                 }
                 "Packages" => {
-                    if category.details.iter().any(|d| d.contains("nix-collect-garbage")) {
+                    if category
+                        .details
+                        .iter()
+                        .any(|d| d.contains("nix-collect-garbage"))
+                    {
                         recommendations.push(Recommendation {
                             category: "Packages".to_string(),
                             title: "Run garbage collection".to_string(),
@@ -430,7 +435,8 @@ impl HealthChecker {
                         recommendations.push(Recommendation {
                             category: "Configuration".to_string(),
                             title: "Review configuration health".to_string(),
-                            description: "Configuration file may need attention or optimization.".to_string(),
+                            description: "Configuration file may need attention or optimization."
+                                .to_string(),
                             command: Some("slop ai-optimize".to_string()),
                             priority: Priority::Low,
                             estimated_impact: "Better maintainability".to_string(),
@@ -489,7 +495,12 @@ impl HealthChecker {
                     Priority::Low => "🟢",
                 };
 
-                println!("{} {} {}", priority_icon, rec.title.bold(), rec.category.dimmed());
+                println!(
+                    "{} {} {}",
+                    priority_icon,
+                    rec.title.bold(),
+                    rec.category.dimmed()
+                );
                 println!("   {}", rec.description);
 
                 if let Some(cmd) = &rec.command {
@@ -518,18 +529,16 @@ mod tests {
     #[test]
     fn test_recommendations_generation() {
         let checker = HealthChecker::new("/etc/nixos/configuration.nix");
-        
+
         let report = HealthReport {
             timestamp: 0,
             overall_score: 70,
-            categories: vec![
-                CategoryHealth {
-                    name: "Disk Usage".to_string(),
-                    score: 60,
-                    status: HealthStatus::Warning,
-                    details: vec!["Root filesystem: 85% used".to_string()],
-                }
-            ],
+            categories: vec![CategoryHealth {
+                name: "Disk Usage".to_string(),
+                score: 60,
+                status: HealthStatus::Warning,
+                details: vec!["Root filesystem: 85% used".to_string()],
+            }],
             recommendations: Vec::new(),
             summary: String::new(),
         };

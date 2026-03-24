@@ -72,11 +72,11 @@ impl ConflictDetector {
     /// Create from config path
     pub fn from_config<P: AsRef<Path>>(config_path: P) -> Result<Self> {
         let mut detector = Self::new();
-        
+
         if let Ok(config) = NixConfig::load(config_path) {
             detector.installed_packages = config.packages.iter().cloned().collect();
         }
-        
+
         Ok(detector)
     }
 
@@ -96,16 +96,26 @@ impl ConflictDetector {
             id: "browsers-multiple".to_string(),
             conflict_type: ConflictType::DuplicateFunctionality,
             severity: ConflictSeverity::Info,
-            packages: vec!["firefox".to_string(), "chromium".to_string(), "google-chrome".to_string(), "brave".to_string()],
+            packages: vec![
+                "firefox".to_string(),
+                "chromium".to_string(),
+                "google-chrome".to_string(),
+                "brave".to_string(),
+            ],
             message: "Multiple web browsers will be installed".to_string(),
-            suggestion: "Having multiple browsers is normal, but consider if you need all of them".to_string(),
+            suggestion: "Having multiple browsers is normal, but consider if you need all of them"
+                .to_string(),
         });
 
         self.add_rule(ConflictRule {
             id: "media-players-multiple".to_string(),
             conflict_type: ConflictType::DuplicateFunctionality,
             severity: ConflictSeverity::Info,
-            packages: vec!["vlc".to_string(), "mpv".to_string(), "celluloid".to_string()],
+            packages: vec![
+                "vlc".to_string(),
+                "mpv".to_string(),
+                "celluloid".to_string(),
+            ],
             message: "Multiple media players will be installed".to_string(),
             suggestion: "Consider keeping only one primary media player".to_string(),
         });
@@ -116,7 +126,8 @@ impl ConflictDetector {
             severity: ConflictSeverity::Info,
             packages: vec!["htop".to_string(), "btop".to_string(), "top".to_string()],
             message: "Multiple system monitors will be installed".to_string(),
-            suggestion: "btop is a modern replacement for htop - consider using only one".to_string(),
+            suggestion: "btop is a modern replacement for htop - consider using only one"
+                .to_string(),
         });
 
         // Desktop environment conflicts
@@ -146,7 +157,8 @@ impl ConflictDetector {
             severity: ConflictSeverity::Info,
             packages: vec!["docker".to_string(), "podman".to_string()],
             message: "Both Docker and Podman will be installed".to_string(),
-            suggestion: "Podman is a daemonless alternative to Docker. You may only need one.".to_string(),
+            suggestion: "Podman is a daemonless alternative to Docker. You may only need one."
+                .to_string(),
         });
 
         // Python version conflicts
@@ -156,7 +168,9 @@ impl ConflictDetector {
             severity: ConflictSeverity::Warning,
             packages: vec!["python27".to_string(), "python3".to_string()],
             message: "Multiple Python versions will be installed".to_string(),
-            suggestion: "Python 2 is EOL. Consider using only Python 3 unless you have legacy needs.".to_string(),
+            suggestion:
+                "Python 2 is EOL. Consider using only Python 3 unless you have legacy needs."
+                    .to_string(),
         });
 
         // Node.js version conflicts
@@ -164,9 +178,15 @@ impl ConflictDetector {
             id: "nodejs-versions".to_string(),
             conflict_type: ConflictType::VersionIncompatibility,
             severity: ConflictSeverity::Warning,
-            packages: vec!["nodejs".to_string(), "nodejs-14".to_string(), "nodejs-16".to_string(), "nodejs-18".to_string()],
+            packages: vec![
+                "nodejs".to_string(),
+                "nodejs-14".to_string(),
+                "nodejs-16".to_string(),
+                "nodejs-18".to_string(),
+            ],
             message: "Multiple Node.js versions detected".to_string(),
-            suggestion: "Consider using nodeenv or nvm for managing multiple Node.js versions.".to_string(),
+            suggestion: "Consider using nodeenv or nvm for managing multiple Node.js versions."
+                .to_string(),
         });
 
         // Performance impact warnings
@@ -174,9 +194,14 @@ impl ConflictDetector {
             id: "heavy-packages".to_string(),
             conflict_type: ConflictType::PerformanceImpact,
             severity: ConflictSeverity::Info,
-            packages: vec!["libreoffice".to_string(), "android-studio".to_string(), "intellij-idea".to_string()],
+            packages: vec![
+                "libreoffice".to_string(),
+                "android-studio".to_string(),
+                "intellij-idea".to_string(),
+            ],
             message: "Large packages will be installed".to_string(),
-            suggestion: "These packages require significant disk space (1GB+) and memory.".to_string(),
+            suggestion: "These packages require significant disk space (1GB+) and memory."
+                .to_string(),
         });
 
         // Shell conflicts
@@ -186,7 +211,9 @@ impl ConflictDetector {
             severity: ConflictSeverity::Info,
             packages: vec!["zsh".to_string(), "fish".to_string(), "bash".to_string()],
             message: "Multiple shells will be installed".to_string(),
-            suggestion: "Having multiple shells is fine, but you'll need to configure each separately.".to_string(),
+            suggestion:
+                "Having multiple shells is fine, but you'll need to configure each separately."
+                    .to_string(),
         });
     }
 
@@ -204,7 +231,7 @@ impl ConflictDetector {
     pub fn check_conflicts(&self, packages: &[String]) -> Vec<Conflict> {
         let mut conflicts = Vec::new();
         let mut all_packages: HashSet<String> = self.installed_packages.clone();
-        
+
         // Add packages to be installed
         for pkg in packages {
             all_packages.insert(pkg.clone());
@@ -212,7 +239,8 @@ impl ConflictDetector {
 
         // Check each rule
         for rule in &self.conflict_rules {
-            let matching_packages: Vec<String> = rule.packages
+            let matching_packages: Vec<String> = rule
+                .packages
                 .iter()
                 .filter(|p| all_packages.iter().any(|ap| ap.contains(p)))
                 .cloned()
@@ -245,7 +273,8 @@ impl ConflictDetector {
                     title: format!("Package '{}' is already installed", pkg),
                     description: format!("The package '{}' is already in your configuration.", pkg),
                     packages_involved: vec![pkg.clone()],
-                    suggestion: "You can skip this installation or verify it's working correctly.".to_string(),
+                    suggestion: "You can skip this installation or verify it's working correctly."
+                        .to_string(),
                     auto_fixable: true,
                 });
             }
@@ -271,16 +300,20 @@ impl ConflictDetector {
 
         // Common dependency issues
         let dependency_rules = [
-            ("rust-analyzer", "rustup", "Rust analyzer requires rustup to be installed"),
+            (
+                "rust-analyzer",
+                "rustup",
+                "Rust analyzer requires rustup to be installed",
+            ),
             ("cargo", "rustup", "Cargo is included with rustup"),
             ("clippy", "rustup", "Clippy is included with rustup"),
             ("rustfmt", "rustup", "Rustfmt is included with rustup"),
         ];
 
         for (pkg, requires, message) in &dependency_rules {
-            if packages.iter().any(|p| p.contains(pkg)) 
+            if packages.iter().any(|p| p.contains(pkg))
                 && !packages.iter().any(|p| p.contains(requires))
-                && !self.installed_packages.iter().any(|p| p.contains(requires)) 
+                && !self.installed_packages.iter().any(|p| p.contains(requires))
             {
                 conflicts.push(Conflict {
                     id: format!("missing-dependency-{}", pkg),
@@ -335,10 +368,22 @@ impl ConflictDetector {
         let mut all_conflicts = conflicts;
         all_conflicts.extend(dependency_conflicts);
 
-        let critical = all_conflicts.iter().filter(|c| c.severity == ConflictSeverity::Critical).count();
-        let errors = all_conflicts.iter().filter(|c| c.severity == ConflictSeverity::Error).count();
-        let warnings = all_conflicts.iter().filter(|c| c.severity == ConflictSeverity::Warning).count();
-        let info = all_conflicts.iter().filter(|c| c.severity == ConflictSeverity::Info).count();
+        let critical = all_conflicts
+            .iter()
+            .filter(|c| c.severity == ConflictSeverity::Critical)
+            .count();
+        let errors = all_conflicts
+            .iter()
+            .filter(|c| c.severity == ConflictSeverity::Error)
+            .count();
+        let warnings = all_conflicts
+            .iter()
+            .filter(|c| c.severity == ConflictSeverity::Warning)
+            .count();
+        let info = all_conflicts
+            .iter()
+            .filter(|c| c.severity == ConflictSeverity::Info)
+            .count();
 
         ConflictReport {
             total: all_conflicts.len(),
@@ -423,7 +468,9 @@ mod tests {
 
         let conflicts = detector.check_conflicts(&vec!["firefox".to_string()]);
 
-        assert!(conflicts.iter().any(|c| c.id.starts_with("already-installed")));
+        assert!(conflicts
+            .iter()
+            .any(|c| c.id.starts_with("already-installed")));
     }
 
     #[test]

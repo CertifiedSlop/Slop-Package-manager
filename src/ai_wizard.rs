@@ -83,22 +83,25 @@ impl SetupWizard {
     /// Run the interactive setup wizard
     pub fn run(&mut self) -> Result<UserPreferences> {
         println!("{} Welcome to the Slop Setup Wizard!", "🤖".blue());
-        println!("{} Let me help you configure your NixOS system.\n", "💡".green());
+        println!(
+            "{} Let me help you configure your NixOS system.\n",
+            "💡".green()
+        );
 
         self.step_system_type()?;
-        
-        if self.preferences.system_type == SystemType::Desktop 
-            || self.preferences.system_type == SystemType::Development 
-            || self.preferences.system_type == SystemType::MediaCenter 
+
+        if self.preferences.system_type == SystemType::Desktop
+            || self.preferences.system_type == SystemType::Development
+            || self.preferences.system_type == SystemType::MediaCenter
         {
             self.step_desktop_environment()?;
         }
 
         self.step_development_stack()?;
         self.step_essential_tools()?;
-        
-        if self.preferences.system_type == SystemType::Desktop 
-            || self.preferences.system_type == SystemType::MediaCenter 
+
+        if self.preferences.system_type == SystemType::Desktop
+            || self.preferences.system_type == SystemType::MediaCenter
         {
             self.step_media_apps()?;
         }
@@ -113,7 +116,10 @@ impl SetupWizard {
     fn step_system_type(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 1: System Type", "📋".blue());
-        println!("{}\n", "What will you use this system for?".to_string().bold());
+        println!(
+            "{}\n",
+            "What will you use this system for?".to_string().bold()
+        );
 
         let options = vec![
             ("Desktop daily driver", SystemType::Desktop),
@@ -143,15 +149,26 @@ impl SetupWizard {
     fn step_desktop_environment(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 2: Desktop Environment", "🖥️".blue());
-        println!("{}\n", "Which desktop environment do you prefer?".to_string().bold());
+        println!(
+            "{}\n",
+            "Which desktop environment do you prefer?"
+                .to_string()
+                .bold()
+        );
 
         let options = vec![
             ("GNOME - Polished, user-friendly", DesktopEnvironment::GNOME),
             ("KDE Plasma - Highly customizable", DesktopEnvironment::KDE),
             ("XFCE - Lightweight, traditional", DesktopEnvironment::XFCE),
-            ("i3 - Tiling window manager (keyboard-focused)", DesktopEnvironment::I3),
+            (
+                "i3 - Tiling window manager (keyboard-focused)",
+                DesktopEnvironment::I3,
+            ),
             ("Sway - Tiling Wayland compositor", DesktopEnvironment::Sway),
-            ("Hyprland - Modern Wayland compositor", DesktopEnvironment::Hyprland),
+            (
+                "Hyprland - Modern Wayland compositor",
+                DesktopEnvironment::Hyprland,
+            ),
             ("None - Window manager only", DesktopEnvironment::None),
         ];
 
@@ -171,13 +188,22 @@ impl SetupWizard {
         // Provide tips based on selection
         match self.preferences.desktop.as_ref().unwrap() {
             DesktopEnvironment::GNOME => {
-                println!("\n{} GNOME works best with extensions. I'll suggest some later.", "💡".yellow());
+                println!(
+                    "\n{} GNOME works best with extensions. I'll suggest some later.",
+                    "💡".yellow()
+                );
             }
             DesktopEnvironment::KDE => {
-                println!("\n{} KDE offers many customization options. Great for power users!", "💡".yellow());
+                println!(
+                    "\n{} KDE offers many customization options. Great for power users!",
+                    "💡".yellow()
+                );
             }
             DesktopEnvironment::I3 | DesktopEnvironment::Sway => {
-                println!("\n{} Tiling WMs have a learning curve but boost productivity!", "💡".yellow());
+                println!(
+                    "\n{} Tiling WMs have a learning curve but boost productivity!",
+                    "💡".yellow()
+                );
             }
             _ => {}
         }
@@ -189,7 +215,12 @@ impl SetupWizard {
     fn step_development_stack(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 3: Development Stack", "💻".blue());
-        println!("{}\n", "Which programming languages will you use? (comma-separated)".to_string().bold());
+        println!(
+            "{}\n",
+            "Which programming languages will you use? (comma-separated)"
+                .to_string()
+                .bold()
+        );
 
         let available = vec![
             ("rust", "Rust - Systems programming"),
@@ -240,7 +271,12 @@ impl SetupWizard {
     fn step_essential_tools(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 4: Essential Tools", "🔧".blue());
-        println!("{}\n", "Which essential tools do you need? (comma-separated)".to_string().bold());
+        println!(
+            "{}\n",
+            "Which essential tools do you need? (comma-separated)"
+                .to_string()
+                .bold()
+        );
 
         let available = vec![
             ("browser", "Web browser (Firefox)"),
@@ -290,7 +326,12 @@ impl SetupWizard {
     fn step_media_apps(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 5: Media Applications", "🎵".blue());
-        println!("{}\n", "Which media applications do you need? (comma-separated)".to_string().bold());
+        println!(
+            "{}\n",
+            "Which media applications do you need? (comma-separated)"
+                .to_string()
+                .bold()
+        );
 
         let available = vec![
             ("video-player", "Video player (VLC, MPV)"),
@@ -345,28 +386,38 @@ impl SetupWizard {
         println!("{} Enable Nix Flakes?", "❓".yellow());
         println!("  1) Yes (recommended for new users)");
         println!("  2) No (use traditional channels)");
-        
+
         let flakes_choice = self.get_number_input(1, 2, 1)?;
         self.preferences.use_flakes = flakes_choice == 1;
 
         println!(
             "\n{} Nix Flakes: {}",
             "✓".green(),
-            if self.preferences.use_flakes { "Enabled" } else { "Disabled" }.green()
+            if self.preferences.use_flakes {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
+            .green()
         );
 
         // Home-manager option
         println!("\n{} Enable Home-Manager?", "❓".yellow());
         println!("  1) Yes (manage user dotfiles)");
         println!("  2) No (system packages only)");
-        
+
         let hm_choice = self.get_number_input(1, 2, 1)?;
         self.preferences.use_home_manager = hm_choice == 1;
 
         println!(
             "\n{} Home-Manager: {}",
             "✓".green(),
-            if self.preferences.use_home_manager { "Enabled" } else { "Disabled" }.green()
+            if self.preferences.use_home_manager {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
+            .green()
         );
 
         Ok(())
@@ -376,10 +427,17 @@ impl SetupWizard {
     fn step_review(&mut self) -> Result<()> {
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("{} Step 7: Review Configuration", "📋".blue());
-        println!("\n{}\n", "Here's your configuration summary:".to_string().bold());
+        println!(
+            "\n{}\n",
+            "Here's your configuration summary:".to_string().bold()
+        );
 
-        println!("{} System Type: {}", "📋".blue(), format!("{:?}", self.preferences.system_type).cyan());
-        
+        println!(
+            "{} System Type: {}",
+            "📋".blue(),
+            format!("{:?}", self.preferences.system_type).cyan()
+        );
+
         if let Some(ref de) = self.preferences.desktop {
             println!("{} Desktop: {}", "🖥️".blue(), format!("{:?}", de).cyan());
         }
@@ -408,8 +466,28 @@ impl SetupWizard {
             );
         }
 
-        println!("{} Nix Flakes: {}", "⚙️".blue(), if self.preferences.use_flakes { "Yes" } else { "No" }.to_string().cyan());
-        println!("{} Home-Manager: {}", "🏠".blue(), if self.preferences.use_home_manager { "Yes" } else { "No" }.to_string().cyan());
+        println!(
+            "{} Nix Flakes: {}",
+            "⚙️".blue(),
+            if self.preferences.use_flakes {
+                "Yes"
+            } else {
+                "No"
+            }
+            .to_string()
+            .cyan()
+        );
+        println!(
+            "{} Home-Manager: {}",
+            "🏠".blue(),
+            if self.preferences.use_home_manager {
+                "Yes"
+            } else {
+                "No"
+            }
+            .to_string()
+            .cyan()
+        );
 
         println!("\n{}", "═══════════════════════════════════════".dimmed());
         println!("\n{} Proceed with this configuration?", "❓".yellow());
@@ -448,22 +526,46 @@ impl SetupWizard {
         let mut packages = Vec::new();
 
         // Essential tools
-        if self.preferences.essential_tools.contains(&"browser".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"browser".to_string())
+        {
             packages.push("firefox".to_string());
         }
-        if self.preferences.essential_tools.contains(&"editor".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"editor".to_string())
+        {
             packages.push("neovim".to_string());
         }
-        if self.preferences.essential_tools.contains(&"terminal".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"terminal".to_string())
+        {
             packages.push("alacritty".to_string());
         }
-        if self.preferences.essential_tools.contains(&"shell".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"shell".to_string())
+        {
             packages.push("zsh".to_string());
         }
-        if self.preferences.essential_tools.contains(&"git".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"git".to_string())
+        {
             packages.push("git".to_string());
         }
-        if self.preferences.essential_tools.contains(&"cli-tools".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"cli-tools".to_string())
+        {
             packages.extend(vec![
                 "ripgrep".to_string(),
                 "fd".to_string(),
@@ -471,7 +573,11 @@ impl SetupWizard {
                 "bat".to_string(),
             ]);
         }
-        if self.preferences.essential_tools.contains(&"system-monitor".to_string()) {
+        if self
+            .preferences
+            .essential_tools
+            .contains(&"system-monitor".to_string())
+        {
             packages.extend(vec!["htop".to_string(), "btop".to_string()]);
         }
 
@@ -479,10 +585,18 @@ impl SetupWizard {
         if self.preferences.dev_languages.contains(&"rust".to_string()) {
             packages.extend(vec!["rustup".to_string(), "cargo".to_string()]);
         }
-        if self.preferences.dev_languages.contains(&"python".to_string()) {
+        if self
+            .preferences
+            .dev_languages
+            .contains(&"python".to_string())
+        {
             packages.extend(vec!["python3".to_string(), "pip".to_string()]);
         }
-        if self.preferences.dev_languages.contains(&"javascript".to_string()) {
+        if self
+            .preferences
+            .dev_languages
+            .contains(&"javascript".to_string())
+        {
             packages.extend(vec!["nodejs".to_string(), "npm".to_string()]);
         }
         if self.preferences.dev_languages.contains(&"go".to_string()) {
@@ -490,10 +604,18 @@ impl SetupWizard {
         }
 
         // Media apps
-        if self.preferences.media_apps.contains(&"video-player".to_string()) {
+        if self
+            .preferences
+            .media_apps
+            .contains(&"video-player".to_string())
+        {
             packages.extend(vec!["vlc".to_string(), "mpv".to_string()]);
         }
-        if self.preferences.media_apps.contains(&"music-player".to_string()) {
+        if self
+            .preferences
+            .media_apps
+            .contains(&"music-player".to_string())
+        {
             packages.push("spotify".to_string());
         }
 
@@ -505,7 +627,10 @@ impl SetupWizard {
         println!("\n{} To apply this configuration, run:\n", "💡".yellow());
         println!("  {}", "slop install <packages>".cyan());
         println!("\nOr let me install them for you:\n");
-        println!("  {}", format!("slop ai install {}", packages.join(" ")).cyan());
+        println!(
+            "  {}",
+            format!("slop ai install {}", packages.join(" ")).cyan()
+        );
 
         println!("\n{} Happy NixOSing!", "🎉".blue());
     }
@@ -620,7 +745,10 @@ pub fn generate_nix_config(preferences: &UserPreferences) -> String {
     if preferences.dev_languages.contains(&"python".to_string()) {
         packages.extend(vec!["python3", "pip"]);
     }
-    if preferences.dev_languages.contains(&"javascript".to_string()) {
+    if preferences
+        .dev_languages
+        .contains(&"javascript".to_string())
+    {
         packages.extend(vec!["nodejs", "npm"]);
     }
     if preferences.dev_languages.contains(&"go".to_string()) {
@@ -637,7 +765,10 @@ pub fn generate_nix_config(preferences: &UserPreferences) -> String {
     if preferences.essential_tools.contains(&"git".to_string()) {
         packages.push("git");
     }
-    if preferences.essential_tools.contains(&"cli-tools".to_string()) {
+    if preferences
+        .essential_tools
+        .contains(&"cli-tools".to_string())
+    {
         packages.extend(vec!["ripgrep", "fd", "fzf", "bat"]);
     }
 
@@ -661,7 +792,8 @@ pub fn generate_nix_config(preferences: &UserPreferences) -> String {
     // Flakes option
     if preferences.use_flakes {
         config.push_str("  # Enable flakes\n");
-        config.push_str("  nix.settings.experimental-features = [ \"nix-command\" \"flakes\" ];\n\n");
+        config
+            .push_str("  nix.settings.experimental-features = [ \"nix-command\" \"flakes\" ];\n\n");
     }
 
     // Home-manager option
@@ -701,7 +833,7 @@ mod tests {
         };
 
         let config = generate_nix_config(&preferences);
-        
+
         assert!(config.contains("GNOME"));
         assert!(config.contains("rustup"));
         assert!(config.contains("firefox"));

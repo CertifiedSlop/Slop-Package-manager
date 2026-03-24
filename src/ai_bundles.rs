@@ -54,7 +54,11 @@ impl BundleManager {
                 "bacon".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["rust".to_string(), "development".to_string(), "programming".to_string()],
+            tags: vec![
+                "rust".to_string(),
+                "development".to_string(),
+                "programming".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -75,7 +79,11 @@ impl BundleManager {
                 "pytest".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["python".to_string(), "development".to_string(), "programming".to_string()],
+            tags: vec![
+                "python".to_string(),
+                "development".to_string(),
+                "programming".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -83,11 +91,7 @@ impl BundleManager {
             name: "Web Development".to_string(),
             description: "Web development with Node.js and tools".to_string(),
             category: "development".to_string(),
-            packages: vec![
-                "nodejs".to_string(),
-                "npm".to_string(),
-                "yarn".to_string(),
-            ],
+            packages: vec!["nodejs".to_string(), "npm".to_string(), "yarn".to_string()],
             optional_packages: vec![
                 "nodePackages.typescript".to_string(),
                 "nodePackages.typescript-language-server".to_string(),
@@ -95,7 +99,12 @@ impl BundleManager {
                 "nodePackages.eslint".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["javascript".to_string(), "typescript".to_string(), "web".to_string(), "development".to_string()],
+            tags: vec![
+                "javascript".to_string(),
+                "typescript".to_string(),
+                "web".to_string(),
+                "development".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -110,7 +119,11 @@ impl BundleManager {
                 "delve".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["go".to_string(), "development".to_string(), "programming".to_string()],
+            tags: vec![
+                "go".to_string(),
+                "development".to_string(),
+                "programming".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -130,7 +143,11 @@ impl BundleManager {
                 "lldb".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["c".to_string(), "cpp".to_string(), "development".to_string()],
+            tags: vec![
+                "c".to_string(),
+                "cpp".to_string(),
+                "development".to_string(),
+            ],
         });
 
         // Desktop bundles
@@ -159,18 +176,18 @@ impl BundleManager {
             name: "Media Bundle".to_string(),
             description: "Media playback and editing tools".to_string(),
             category: "media".to_string(),
-            packages: vec![
-                "vlc".to_string(),
-                "mpv".to_string(),
-                "ffmpeg".to_string(),
-            ],
+            packages: vec!["vlc".to_string(), "mpv".to_string(), "ffmpeg".to_string()],
             optional_packages: vec![
                 "obs-studio".to_string(),
                 "audacity".to_string(),
                 "kdenlive".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["media".to_string(), "video".to_string(), "audio".to_string()],
+            tags: vec![
+                "media".to_string(),
+                "video".to_string(),
+                "audio".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -178,10 +195,7 @@ impl BundleManager {
             name: "Gaming Bundle".to_string(),
             description: "Gaming tools and platforms".to_string(),
             category: "gaming".to_string(),
-            packages: vec![
-                "steam".to_string(),
-                "gamescope".to_string(),
-            ],
+            packages: vec!["steam".to_string(), "gamescope".to_string()],
             optional_packages: vec![
                 "lutris".to_string(),
                 "heroic".to_string(),
@@ -212,7 +226,11 @@ impl BundleManager {
                 "httpie".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["cli".to_string(), "utilities".to_string(), "terminal".to_string()],
+            tags: vec![
+                "cli".to_string(),
+                "utilities".to_string(),
+                "terminal".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -220,18 +238,18 @@ impl BundleManager {
             name: "System Monitoring".to_string(),
             description: "System monitoring and diagnostics".to_string(),
             category: "utilities".to_string(),
-            packages: vec![
-                "htop".to_string(),
-                "btop".to_string(),
-                "ncdu".to_string(),
-            ],
+            packages: vec!["htop".to_string(), "btop".to_string(), "ncdu".to_string()],
             optional_packages: vec![
                 "powertop".to_string(),
                 "iotop".to_string(),
                 "lm_sensors".to_string(),
             ],
             conflicts: vec![],
-            tags: vec!["system".to_string(), "monitoring".to_string(), "utilities".to_string()],
+            tags: vec![
+                "system".to_string(),
+                "monitoring".to_string(),
+                "utilities".to_string(),
+            ],
         });
 
         self.add_bundle(PackageBundle {
@@ -260,10 +278,7 @@ impl BundleManager {
             name: "Security Basics".to_string(),
             description: "Essential security tools".to_string(),
             category: "security".to_string(),
-            packages: vec![
-                "gnupg".to_string(),
-                "password-store".to_string(),
-            ],
+            packages: vec!["gnupg".to_string(), "password-store".to_string()],
             optional_packages: vec![
                 "veracrypt".to_string(),
                 "keepassxc".to_string(),
@@ -279,17 +294,18 @@ impl BundleManager {
             name: "Docker & Containers".to_string(),
             description: "Docker and container management".to_string(),
             category: "development".to_string(),
-            packages: vec![
-                "docker".to_string(),
-                "docker-compose".to_string(),
-            ],
+            packages: vec!["docker".to_string(), "docker-compose".to_string()],
             optional_packages: vec![
                 "podman".to_string(),
                 "lazydocker".to_string(),
                 "containerd".to_string(),
             ],
             conflicts: vec!["podman".to_string()],
-            tags: vec!["containers".to_string(), "docker".to_string(), "development".to_string()],
+            tags: vec![
+                "containers".to_string(),
+                "docker".to_string(),
+                "development".to_string(),
+            ],
         });
     }
 
@@ -343,7 +359,10 @@ impl BundleManager {
                     suggestions.push(bundle);
                 }
             }
-            if keyword_lower.contains("web") || keyword_lower.contains("javascript") || keyword_lower.contains("node") {
+            if keyword_lower.contains("web")
+                || keyword_lower.contains("javascript")
+                || keyword_lower.contains("node")
+            {
                 if let Some(bundle) = self.get_bundle("dev-web") {
                     suggestions.push(bundle);
                 }
@@ -353,12 +372,18 @@ impl BundleManager {
                     suggestions.push(bundle);
                 }
             }
-            if keyword_lower.contains("gaming") || keyword_lower.contains("game") || keyword_lower.contains("steam") {
+            if keyword_lower.contains("gaming")
+                || keyword_lower.contains("game")
+                || keyword_lower.contains("steam")
+            {
                 if let Some(bundle) = self.get_bundle("desktop-gaming") {
                     suggestions.push(bundle);
                 }
             }
-            if keyword_lower.contains("media") || keyword_lower.contains("video") || keyword_lower.contains("audio") {
+            if keyword_lower.contains("media")
+                || keyword_lower.contains("video")
+                || keyword_lower.contains("audio")
+            {
                 if let Some(bundle) = self.get_bundle("desktop-media") {
                     suggestions.push(bundle);
                 }
@@ -394,11 +419,8 @@ impl BundleManager {
 
     /// Get all categories
     pub fn get_categories(&self) -> Vec<String> {
-        let mut categories: Vec<String> = self
-            .bundles
-            .values()
-            .map(|b| b.category.clone())
-            .collect();
+        let mut categories: Vec<String> =
+            self.bundles.values().map(|b| b.category.clone()).collect();
         categories.sort();
         categories.dedup();
         categories

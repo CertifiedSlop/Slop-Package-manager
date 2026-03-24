@@ -88,10 +88,17 @@ impl ConfigOptimizer {
 
         // Common packages that are often installed but unused
         let potentially_unused = [
-            "vim", "neovim", "emacs",  // Multiple editors
-            "firefox", "chromium", "google-chrome",  // Multiple browsers
-            "vlc", "mpv",  // Multiple media players
-            "htop", "btop", "top",  // Multiple system monitors
+            "vim",
+            "neovim",
+            "emacs", // Multiple editors
+            "firefox",
+            "chromium",
+            "google-chrome", // Multiple browsers
+            "vlc",
+            "mpv", // Multiple media players
+            "htop",
+            "btop",
+            "top", // Multiple system monitors
         ];
 
         let installed: HashSet<&String> = self.config.packages.iter().collect();
@@ -223,7 +230,10 @@ impl ConfigOptimizer {
                     // Extract setting name and value
                     let parts: Vec<&str> = code.splitn(2, '=').collect();
                     if parts.len() == 2 {
-                        (parts[0].trim().to_string(), parts[1].trim().trim_end_matches(';').to_string())
+                        (
+                            parts[0].trim().to_string(),
+                            parts[1].trim().trim_end_matches(';').to_string(),
+                        )
                     } else {
                         (code.clone(), String::new())
                     }
@@ -302,7 +312,8 @@ impl ConfigOptimizer {
         if !content.contains("zram") && !content.contains("zswap") {
             suggestions.push(OptimizationSuggestion {
                 title: "Consider enabling ZRAM or Zswap".to_string(),
-                description: "ZRAM/Zswap can improve memory performance and reduce swap usage.".to_string(),
+                description: "ZRAM/Zswap can improve memory performance and reduce swap usage."
+                    .to_string(),
                 impact: ImpactLevel::Medium,
                 category: Category::Performance,
                 action: Action::EnableSettings(vec![(
@@ -317,11 +328,13 @@ impl ConfigOptimizer {
         if !content.contains("hardware.cpu") {
             suggestions.push(OptimizationSuggestion {
                 title: "Enable CPU microcode updates".to_string(),
-                description: "CPU microcode updates provide security and stability improvements.".to_string(),
+                description: "CPU microcode updates provide security and stability improvements."
+                    .to_string(),
                 impact: ImpactLevel::High,
                 category: Category::Performance,
                 action: Action::General(
-                    "Add hardware.cpu.intel.updateMicrocode or hardware.cpu.amd.updateMicrocode".to_string(),
+                    "Add hardware.cpu.intel.updateMicrocode or hardware.cpu.amd.updateMicrocode"
+                        .to_string(),
                 ),
                 estimated_savings: Some("Security and stability".to_string()),
             });
@@ -403,8 +416,7 @@ mod tests {
 
         // Should detect multiple editors
         assert!(suggestions.iter().any(|s| {
-            s.category == Category::UnusedPackages
-                && s.description.contains("Multiple editors")
+            s.category == Category::UnusedPackages && s.description.contains("Multiple editors")
         }));
     }
 
@@ -424,9 +436,9 @@ mod tests {
         let suggestions = optimizer.analyze();
 
         // Should not suggest build optimizations since they're already enabled
-        assert!(!suggestions.iter().any(|s| {
-            s.category == Category::BuildOptimization
-        }));
+        assert!(!suggestions
+            .iter()
+            .any(|s| { s.category == Category::BuildOptimization }));
     }
 
     #[test]

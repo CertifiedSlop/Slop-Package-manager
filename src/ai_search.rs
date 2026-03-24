@@ -84,7 +84,11 @@ impl SemanticSearchEngine {
                     "edit".to_string(),
                     "ide".to_string(),
                 ],
-                example_packages: vec!["neovim".to_string(), "vscode".to_string(), "emacs".to_string()],
+                example_packages: vec![
+                    "neovim".to_string(),
+                    "vscode".to_string(),
+                    "emacs".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Terminal Emulators".to_string(),
@@ -96,7 +100,11 @@ impl SemanticSearchEngine {
                     "command".to_string(),
                     "tty".to_string(),
                 ],
-                example_packages: vec!["alacritty".to_string(), "kitty".to_string(), "wezterm".to_string()],
+                example_packages: vec![
+                    "alacritty".to_string(),
+                    "kitty".to_string(),
+                    "wezterm".to_string(),
+                ],
             },
             PackageCategory {
                 name: "System Monitoring".to_string(),
@@ -109,7 +117,11 @@ impl SemanticSearchEngine {
                     "top".to_string(),
                     "stats".to_string(),
                 ],
-                example_packages: vec!["htop".to_string(), "btop".to_string(), "glances".to_string()],
+                example_packages: vec![
+                    "htop".to_string(),
+                    "btop".to_string(),
+                    "glances".to_string(),
+                ],
             },
             PackageCategory {
                 name: "File Management".to_string(),
@@ -122,7 +134,12 @@ impl SemanticSearchEngine {
                     "directory".to_string(),
                     "ls".to_string(),
                 ],
-                example_packages: vec!["ranger".to_string(), "nnn".to_string(), "lf".to_string(), "eza".to_string()],
+                example_packages: vec![
+                    "ranger".to_string(),
+                    "nnn".to_string(),
+                    "lf".to_string(),
+                    "eza".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Development Tools".to_string(),
@@ -162,7 +179,11 @@ impl SemanticSearchEngine {
                     "graphics".to_string(),
                     "draw".to_string(),
                 ],
-                example_packages: vec!["gimp".to_string(), "inkscape".to_string(), "nomacs".to_string()],
+                example_packages: vec![
+                    "gimp".to_string(),
+                    "inkscape".to_string(),
+                    "nomacs".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Video Editing".to_string(),
@@ -175,7 +196,11 @@ impl SemanticSearchEngine {
                     "render".to_string(),
                     "production".to_string(),
                 ],
-                example_packages: vec!["kdenlive".to_string(), "obs-studio".to_string(), "shotcut".to_string()],
+                example_packages: vec![
+                    "kdenlive".to_string(),
+                    "obs-studio".to_string(),
+                    "shotcut".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Communication".to_string(),
@@ -187,7 +212,11 @@ impl SemanticSearchEngine {
                     "talk".to_string(),
                     "social".to_string(),
                 ],
-                example_packages: vec!["discord".to_string(), "telegram-desktop".to_string(), "signal-desktop".to_string()],
+                example_packages: vec![
+                    "discord".to_string(),
+                    "telegram-desktop".to_string(),
+                    "signal-desktop".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Networking Tools".to_string(),
@@ -212,7 +241,11 @@ impl SemanticSearchEngine {
                     "protect".to_string(),
                     "password".to_string(),
                 ],
-                example_packages: vec!["gnupg".to_string(), "keepassxc".to_string(), "veracrypt".to_string()],
+                example_packages: vec![
+                    "gnupg".to_string(),
+                    "keepassxc".to_string(),
+                    "veracrypt".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Gaming".to_string(),
@@ -224,7 +257,11 @@ impl SemanticSearchEngine {
                     "steam".to_string(),
                     "xbox".to_string(),
                 ],
-                example_packages: vec!["steam".to_string(), "lutris".to_string(), "gamescope".to_string()],
+                example_packages: vec![
+                    "steam".to_string(),
+                    "lutris".to_string(),
+                    "gamescope".to_string(),
+                ],
             },
             PackageCategory {
                 name: "Office/Productivity".to_string(),
@@ -294,7 +331,7 @@ impl SemanticSearchEngine {
         // Add traditional results with semantic enhancement
         for result in traditional_results {
             let (match_type, reasoning) = self.determine_match_type(&result, &matching_categories);
-            
+
             results.push(SemanticSearchResult {
                 attr_name: result.attr_name,
                 package: result.package,
@@ -337,10 +374,14 @@ impl SemanticSearchEngine {
                 MatchType::Related => 3,
                 MatchType::Fuzzy => 4,
             };
-            
+
             type_priority(&a.match_type)
                 .cmp(&type_priority(&b.match_type))
-                .then_with(|| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal))
+                .then_with(|| {
+                    b.score
+                        .partial_cmp(&a.score)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
         });
 
         results
@@ -414,15 +455,16 @@ impl SemanticSearchEngine {
 
         // Check for exact match
         if attr_lower == name_lower {
-            return (
-                MatchType::Exact,
-                "Exact package name match".to_string(),
-            );
+            return (MatchType::Exact, "Exact package name match".to_string());
         }
 
         // Check for category match
         for category in categories {
-            if category.example_packages.iter().any(|p| p == &result.attr_name) {
+            if category
+                .example_packages
+                .iter()
+                .any(|p| p == &result.attr_name)
+            {
                 return (
                     MatchType::Category,
                     format!("Found in category: {}", category.name),
@@ -433,24 +475,18 @@ impl SemanticSearchEngine {
         // Check for semantic match based on description
         if let Some(desc) = &result.package.description {
             if desc.to_lowercase().contains(&name_lower) {
-                return (
-                    MatchType::Semantic,
-                    "Matched by description".to_string(),
-                );
+                return (MatchType::Semantic, "Matched by description".to_string());
             }
         }
 
         // Default to fuzzy match
-        (
-            MatchType::Fuzzy,
-            "Fuzzy/text match".to_string(),
-        )
+        (MatchType::Fuzzy, "Fuzzy/text match".to_string())
     }
 
     /// Search by use case
     pub fn search_by_use_case(&self, use_case: &str) -> Vec<SemanticSearchResult> {
         let use_case_lower = use_case.to_lowercase();
-        
+
         // Map use cases to package recommendations
         let use_case_packages: HashMap<&str, Vec<&str>> = [
             ("web browsing", vec!["firefox", "chromium"]),
@@ -468,7 +504,10 @@ impl SemanticSearchEngine {
             ("gaming", vec!["steam", "lutris", "gamescope"]),
             ("office work", vec!["libreoffice", "onlyoffice"]),
             ("security privacy", vec!["gnupg", "keepassxc", "veracrypt"]),
-        ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         let mut results = Vec::new();
 
@@ -504,9 +543,13 @@ impl SemanticSearchEngine {
     }
 
     /// Search within a specific category
-    pub fn search_in_category(&self, query: &str, category_name: &str) -> Vec<SemanticSearchResult> {
+    pub fn search_in_category(
+        &self,
+        query: &str,
+        category_name: &str,
+    ) -> Vec<SemanticSearchResult> {
         let category = self.categories.iter().find(|c| c.name == category_name);
-        
+
         let Some(category) = category else {
             return Vec::new();
         };
@@ -550,7 +593,7 @@ mod tests {
     fn test_engine_creation() {
         let resolver = PackageResolver::new();
         let engine = SemanticSearchEngine::new(resolver);
-        
+
         assert!(!engine.categories.is_empty());
         assert!(!engine.keyword_index.is_empty());
     }
@@ -559,9 +602,9 @@ mod tests {
     fn test_semantic_search_browser() {
         let resolver = PackageResolver::new();
         let engine = SemanticSearchEngine::new(resolver);
-        
+
         let results = engine.search("browser");
-        
+
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.match_type == MatchType::Category));
     }
@@ -570,20 +613,22 @@ mod tests {
     fn test_search_by_use_case() {
         let resolver = PackageResolver::new();
         let engine = SemanticSearchEngine::new(resolver);
-        
+
         let results = engine.search_by_use_case("video editing");
-        
+
         assert!(!results.is_empty());
-        assert!(results.iter().any(|r| r.attr_name == "kdenlive" || r.attr_name == "obs-studio"));
+        assert!(results
+            .iter()
+            .any(|r| r.attr_name == "kdenlive" || r.attr_name == "obs-studio"));
     }
 
     #[test]
     fn test_get_categories() {
         let resolver = PackageResolver::new();
         let engine = SemanticSearchEngine::new(resolver);
-        
+
         let categories = engine.get_categories();
-        
+
         assert!(categories.len() > 10);
     }
 }
