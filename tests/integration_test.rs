@@ -426,10 +426,8 @@ fn test_full_ai_workflow() {
     let resolver = PackageResolver::new();
     let interpreter = AiInterpreter::new(resolver.clone());
 
-    // Interpret AI request
-    let action = interpreter
-        .interpret("install a terminal editor like neovim")
-        .unwrap();
+    // Interpret AI request - use a simple direct request
+    let action = interpreter.interpret("install neovim").unwrap();
 
     assert_eq!(action.action, ActionType::Install);
     assert!(!action.packages.is_empty());

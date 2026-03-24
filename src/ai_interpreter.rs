@@ -207,7 +207,7 @@ impl AiInterpreter {
         let suggest_patterns = [
             r"(?:suggest|recommend)\s*(?:me)?\s*(?:some)?\s*(?:packages)?(?:for)?\s*(\w+)?",
             r"(?:what\s+(?:should|can\s+I)\s+(?:install|add))\s*(?:for)?\s*(\w+)?",
-            r"(?:i\s+want\s+to)\s*(\w+)\s*(?:development|programming)?",
+            r"(?:i\s+want\s+to\s+)(?:learn|start|get\s+into|do)\s*(\w+)\s*(?:development|programming)?",
         ];
 
         for pattern in suggest_patterns {
@@ -234,7 +234,7 @@ impl AiInterpreter {
     fn pattern_match(&self, request: &str) -> Option<AiAction> {
         // Install patterns
         let install_patterns = [
-            r"(?:install|add|get|download|setup|configure)\s+(?:a|an|the)?\s*(.+)",
+            r"(?:^|\s)(?:install|add|get|download|setup|configure)\s+(?:a|an|the)?\s*(.+)",
             r"(?:i\s+want|i\s+need|i\s+would\s+like)\s+(?:a|an|the)?\s*(.+)",
             r"(?:give\s+me|show\s+me)\s+(?:a|an|the)?\s*(.+)",
             r"(.+)\s+(?:installer|setup|please)",
@@ -242,13 +242,14 @@ impl AiInterpreter {
 
         // Remove patterns
         let remove_patterns = [
-            r"(?:remove|delete|uninstall|drop|get\s+rid\s+of)\s+(?:a|an|the)?\s*(.+)",
+            r"(?:^|\s)(?:remove|delete|uninstall|drop|get\s+rid\s+of)\s+(?:a|an|the)?\s*(.+)",
             r"(?:i\s+don't\s+want|i\s+hate|i\s+dislike)\s+(?:a|an|the)?\s*(.+)",
         ];
 
         // Check install patterns
         for pattern in install_patterns {
-            if let Some(caps) = Regex::new(pattern).ok()?.captures(request) {
+            let re = Regex::new(pattern).ok()?;
+            if let Some(caps) = re.captures(request) {
                 if let Some(matched) = caps.get(1) {
                     let package_query = matched.as_str().trim();
                     let packages = self.resolve_packages(package_query);

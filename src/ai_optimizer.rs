@@ -428,7 +428,8 @@ mod tests {
         let content = r#"{ config, pkgs, ... }: {
   nix.settings.auto-optimise-store = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  
+  nix.settings.trusted-users = [ "root" "@wheel" ];
+
   environment.systemPackages = with pkgs; [
     firefox
   ];
@@ -439,9 +440,13 @@ mod tests {
         let suggestions = optimizer.analyze();
 
         // Should not suggest build optimizations since they're already enabled
-        assert!(!suggestions
-            .iter()
-            .any(|s| { s.category == Category::BuildOptimization }));
+        // Note: The test may still get other categories of suggestions
+        assert!(
+            !suggestions
+                .iter()
+                .any(|s| { s.category == Category::BuildOptimization }),
+            "Build optimization was suggested despite settings being enabled"
+        );
     }
 
     #[test]
