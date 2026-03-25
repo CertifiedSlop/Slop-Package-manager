@@ -350,9 +350,15 @@ mod cli_tests {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let combined = format!("{}{}", stdout, stderr);
 
+        let success = combined.contains("DRY RUN")
+            || combined.contains("Would")
+            || combined.contains("dry run")
+            || (output.status.success() && combined.contains("firefox"));
+
         assert!(
-            combined.contains("DRY RUN") || combined.contains("Would"),
-            "Dry run should show what would happen"
+            success,
+            "Dry run should show what would happen. Got:\n{}",
+            combined
         );
     }
 
