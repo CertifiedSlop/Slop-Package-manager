@@ -440,7 +440,7 @@ mod tests {
     #[test]
     fn test_bundle_manager_creation() {
         let manager = BundleManager::new();
-        assert!(manager.all_bundles().len() > 0);
+        assert!(!manager.all_bundles().is_empty());
     }
 
     #[test]

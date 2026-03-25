@@ -137,7 +137,7 @@ fn test_package_search_integration() {
 
     // Search should return multiple results
     let results = resolver.search("git");
-    assert!(results.len() >= 1);
+    assert!(!results.is_empty());
 }
 
 #[test]

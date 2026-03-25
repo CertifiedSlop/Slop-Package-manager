@@ -443,7 +443,7 @@ mod tests {
     #[test]
     fn test_detect_multiple_editors() {
         let detector = ConflictDetector::new();
-        let conflicts = detector.check_conflicts(&vec!["vim".to_string(), "neovim".to_string()]);
+        let conflicts = detector.check_conflicts(&["vim".to_string(), "neovim".to_string()]);
 
         assert!(!conflicts.is_empty());
         assert!(conflicts.iter().any(|c| c.id == "editors-multiple"));
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_detect_multiple_browsers() {
         let detector = ConflictDetector::new();
-        let conflicts = detector.check_conflicts(&vec![
+        let conflicts = detector.check_conflicts(&[
             "firefox".to_string(),
             "chromium".to_string(),
             "google-chrome".to_string(),
@@ -466,7 +466,7 @@ mod tests {
         let mut detector = ConflictDetector::new();
         detector.installed_packages.insert("firefox".to_string());
 
-        let conflicts = detector.check_conflicts(&vec!["firefox".to_string()]);
+        let conflicts = detector.check_conflicts(&["firefox".to_string()]);
 
         assert!(conflicts
             .iter()
@@ -491,7 +491,7 @@ mod tests {
     #[test]
     fn test_no_conflicts() {
         let detector = ConflictDetector::new();
-        let conflicts = detector.check_conflicts(&vec!["firefox".to_string()]);
+        let conflicts = detector.check_conflicts(&["firefox".to_string()]);
 
         // Should have minimal or no conflicts for single package
         assert!(conflicts.len() <= 1);
