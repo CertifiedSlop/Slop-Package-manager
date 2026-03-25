@@ -3,7 +3,7 @@
 //! End-to-end tests that verify the full workflow of package management operations.
 
 use slop::ai_interpreter::{ActionType, AiInterpreter};
-use slop::flake_manager::{Flake, FlakeInput};
+use slop::flake_manager::Flake;
 use slop::nix_config::NixConfig;
 use slop::package_resolver::PackageResolver;
 use slop::rebuild::RebuildExecutor;

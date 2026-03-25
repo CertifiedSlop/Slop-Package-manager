@@ -44,9 +44,10 @@
 
 1. Run all checks:
    ```bash
-   cargo fmt
-   cargo clippy -- -D warnings
-   cargo test
+   # Use nix develop for consistent environment
+   nix develop --command cargo fmt
+   nix develop --command cargo clippy -- -D warnings
+   nix develop --command cargo test
    ```
 
 2. Update documentation:
@@ -55,6 +56,15 @@
    - CHANGELOG
 
 3. Write clear commit messages
+
+### CI/CD Checklist
+
+Before merging, ensure:
+- [ ] All CI checks pass (rust-matrix, nix-flake-build, security-audit, docs)
+- [ ] No clippy warnings
+- [ ] Tests pass on all Rust versions in matrix
+- [ ] Documentation builds without warnings
+- [ ] Security audit passes
 
 ### During Review
 

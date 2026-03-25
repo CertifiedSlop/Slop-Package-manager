@@ -1,16 +1,59 @@
+# Slop Package Manager - Cargo Configuration
+# Optimized for CI/CD and development workflows
+
 [build]
 target-dir = "target"
+# Use incremental builds for faster compilation in CI
+incremental = true
 
+# Cross-compilation targets
 [target.x86_64-unknown-linux-musl]
 linker = "musl-gcc"
 
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-gnu-gcc"
+
+# CI-optimized release profile
+# Balances build time and binary size for CI artifacts
+[profile.ci-release]
+inherits = "release"
+lto = "thin"           # Faster than full LTO, still provides good optimization
+codegen-units = 1       # Better optimization
+strip = true            # Remove debug symbols for smaller binaries
+debug = false
+panic = "abort"         # Smaller binaries
+
+# Standard release profile (for local builds)
+# Note: This is the base profile, ci-release inherits from it
 [profile.release]
-lto = true
+lto = "thin"
 codegen-units = 1
 strip = true
+panic = "abort"
 
+# Development profile with faster builds
 [profile.dev]
+debug = "line-tables-only"  # Faster compilation, still useful backtraces
+incremental = true
+opt-level = 0
+
+# Test profile optimized for CI
+[profile.test]
+inherits = "dev"
+debug = "line-tables-only"
+
+# Bench profile
+[profile.bench]
+inherits = "release"
 debug = true
 
-[profile.test]
-debug = true
+# Document generation settings
+[doc]
+browser = "false"
+
+# Faster linking in development
+[target.'cfg(target_os = "linux")']
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
