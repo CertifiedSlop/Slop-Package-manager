@@ -51,7 +51,7 @@ jobs:
 
       - name: Set up Rust toolchain
         run: |
-          nix develop --command rustup default ${{ matrix.rust }}
+          nix-shell shell.nix --run "rustup default ${{ matrix.rust }}"
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -63,25 +63,25 @@ jobs:
       - name: Check formatting (stable only)
         if: matrix.rust == 'stable'
         run: |
-          nix develop --command cargo fmt --all -- --check
+          nix-shell shell.nix --run "cargo fmt --all -- --check"
 
       - name: Run Clippy (stable only)
         if: matrix.clippy
         run: |
-          nix develop --command cargo clippy --all-targets --all-features -- -D warnings
+          nix-shell shell.nix --run "cargo clippy --all-targets --all-features -- -D warnings"
 
       - name: Build
         run: |
-          nix develop --command cargo build --verbose --profile ci-release
+          nix-shell shell.nix --run "cargo build --verbose --profile ci-release"
 
       - name: Run tests
         run: |
-          nix develop --command cargo test --verbose --all-targets
+          nix-shell shell.nix --run "cargo test --verbose --all-targets"
 
       - name: Run tests (all features)
         if: matrix.rust == 'stable'
         run: |
-          nix develop --command cargo test --verbose --all-features --all-targets
+          nix-shell shell.nix --run "cargo test --verbose --all-features --all-targets"
 
   # ============================================
   # Nix Flake Build
@@ -97,19 +97,10 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Cachix cache
-        if: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
-        uses: cachix/cachix-action@v15
-        with:
-          name: slop
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          skipPush: true
-          useDaemon: false
-
       - name: Build with Nix flake (using devShell)
         run: |
           # Build using the devShell to ensure all dependencies are available
-          nix develop --command cargo build --release
+          nix-shell shell.nix --run "cargo build --release"
 
           # Also verify the flake package builds correctly
           nix build .#default --print-build-logs
@@ -146,12 +137,12 @@ jobs:
       - name: Install cargo-audit if not cached
         run: |
           if ! command -v cargo-audit &> /dev/null; then
-            nix develop --command cargo install cargo-audit --locked
+            nix-shell shell.nix --run "cargo install cargo-audit --locked"
           fi
 
       - name: Run security audit
         run: |
-          nix develop --command cargo audit --ignore RUSTSEC-2023-0071 || echo "Security audit completed with warnings"
+          nix-shell shell.nix --run "cargo audit --ignore RUSTSEC-2023-0071 || echo 'Security audit completed with warnings'"
         continue-on-error: true
 
   # ============================================
@@ -170,7 +161,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          nix develop --command cargo doc --no-deps --all-features
+          nix-shell shell.nix --run "cargo doc --no-deps --all-features"
         env:
           RUSTDOCFLAGS: "--deny warnings"
 
