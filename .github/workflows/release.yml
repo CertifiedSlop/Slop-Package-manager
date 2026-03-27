@@ -1,5 +1,9 @@
 name: Release
 
+permissions:
+  contents: read
+  packages: read
+
 # Prevent concurrent release runs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
