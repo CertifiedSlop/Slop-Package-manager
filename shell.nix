@@ -1,7 +1,7 @@
 # Development shell for slop
 # Usage: nix-shell shell.nix
 
-{ pkgs ? import <nixpkgs> {
+{ pkgs ? import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
   overlays = [
     (import (builtins.fetchTarball {
       url = "https://github.com/oxalica/rust-overlay/archive/master.tar.gz";
