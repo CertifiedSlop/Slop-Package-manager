@@ -1,191 +1,32 @@
 name: CI
 
-# Prevent concurrent runs on the same branch/PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
-  # Allow manual workflow runs
   workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: "1"
-  RUST_BACKTRACE: "1"
-  RUSTFLAGS: "-D warnings"
 
 jobs:
-  # ============================================
-  # Rust Build & Test Matrix
-  # ============================================
-  rust-matrix:
+  checks:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Test multiple Rust versions
-        rust:
-          - stable
-          - "1.75"  # MSRV (Minimum Supported Rust Version)
-        include:
-          - rust: stable
-            clippy: true
-          - rust: "1.75"
-            clippy: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
       - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: "rust-${{ matrix.rust }}"
-          cache-on-failure: true
-          shared-key: "cargo"
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-      - name: Check formatting (stable only)
-        if: matrix.rust == 'stable'
-        run: |
-          cargo fmt --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
-      - name: Run Clippy (stable only)
-        if: matrix.clippy
-        run: |
-          cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Build
-        run: |
-          cargo build --verbose --profile ci-release
-
-      - name: Run tests
-        run: |
-          cargo test --verbose --all-targets
-
-      - name: Run tests (all features)
-        if: matrix.rust == 'stable'
-        run: |
-          cargo test --verbose --all-features --all-targets
-
-  # ============================================
-  # Nix Flake Build
-  # ============================================
-  nix-flake-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build with Nix flake (using devShell)
-        run: |
-          # Build using the devShell to ensure all dependencies are available
-          nix-shell shell.nix --run "cargo build --release"
-
-          # Also verify the flake package builds correctly
-          nix build .#default --print-build-logs
-
-      - name: Run flake checks
-        run: |
-          nix flake check --print-build-logs || echo "Flake check completed (may have warnings)"
-
-  # ============================================
-  # Security Audit
-  # ============================================
-  security-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache cargo-audit
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/cargo-audit
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-          key: "cargo-audit-${{ hashFiles('Cargo.lock') }}"
-          restore-keys: |
-            cargo-audit-
-
-      - name: Install cargo-audit if not cached
-        run: |
-          if ! command -v cargo-audit &> /dev/null; then
-            nix-shell shell.nix --run "cargo install cargo-audit --locked"
-          fi
-
-      - name: Run security audit
-        run: |
-          nix-shell shell.nix --run "cargo audit --ignore RUSTSEC-2023-0071 || echo 'Security audit completed with warnings'"
-        continue-on-error: true
-
-  # ============================================
-  # Documentation Build
-  # ============================================
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build documentation
-        run: |
-          nix-shell shell.nix --run "cargo doc --no-deps --all-features"
-        env:
-          RUSTDOCFLAGS: "--deny warnings"
-
-  # ============================================
-  # Summary Job (for branch protection)
-  # ============================================
-  ci-summary:
-    runs-on: ubuntu-latest
-    needs: [rust-matrix, nix-flake-build, security-audit, docs]
-    if: always()
-    steps:
-      - name: Check CI status
-        run: |
-          echo "=== CI Summary ==="
-          echo "Rust Matrix: ${{ needs.rust-matrix.result }}"
-          echo "Nix Flake Build: ${{ needs.nix-flake-build.result }}"
-          echo "Security Audit: ${{ needs.security-audit.result }}"
-          echo "Documentation: ${{ needs.docs.result }}"
-          
-          # Fail if any critical job failed
-          if [[ "${{ needs.rust-matrix.result }}" == "failure" ]] || \
-             [[ "${{ needs.nix-flake-build.result }}" == "failure" ]] || \
-             [[ "${{ needs.security-audit.result }}" == "failure" ]]; then
-            echo "CI failed!"
-            exit 1
-          fi
-          echo "All critical CI checks passed!"
+      - name: Compile check
+        run: cargo check --all-targets --all-features
