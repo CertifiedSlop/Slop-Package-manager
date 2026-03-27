@@ -55,5 +55,7 @@ debug = true
 browser = "false"
 
 # Faster linking in development
-[target.'cfg(target_os = "linux")']
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+# Disabling by default as it breaks Nix builds and CI where `lld` is not explicitly available.
+# To use `lld` locally, uncomment the lines below or add them to your `~/.cargo/config.toml`.
+# [target.'cfg(target_os = "linux")']
+# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
